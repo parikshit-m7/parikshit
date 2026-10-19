@@ -59,7 +59,7 @@ module.exports.requestPasswordReset = async (req, res) => {
     user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
-    const baseUrl = (process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\\/$/, "");
+    const baseUrl = (process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
     const resetUrl = `${baseUrl}/reset-password/${rawToken}`;
     const port = Number(process.env.SMTP_PORT || 465);
     const transporter = nodemailer.createTransport({
@@ -74,7 +74,7 @@ module.exports.requestPasswordReset = async (req, res) => {
         from: process.env.MAIL_FROM,
         to: user.email,
         subject: "Reset your Wanderlust password",
-        text: `We received a request to reset your Wanderlust password. This link expires in 15 minutes and can be used once: ${resetUrl}\\n\\nIf you didn't request this, you can ignore this email.`,
+        text: `We received a request to reset your Wanderlust password. This link expires in 15 minutes and can be used once: ${resetUrl}\n\nIf you did not request this, you can ignore this email.`,
         html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Use the button below to choose a new password. This link expires in 15 minutes and can only be used once.</p><p><a href="${resetUrl}" style="display:inline-block;background:#244b3e;color:white;padding:13px 20px;border-radius:24px;text-decoration:none">Reset password</a></p><p>If you didn't request this, you can safely ignore this email.</p></div>`,
       });
     } catch (err) {

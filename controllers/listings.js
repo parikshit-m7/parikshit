@@ -7,8 +7,25 @@ const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : nul
 
 module.exports.index = async (req, res) => {
     const { mongoFilter, search } = buildListingSearch(req.query.search);
-    const allListings = await Listing.find(mongoFilter);
-    res.render("listings/index.ejs", { allListings, search });
+    const filter = { ...mongoFilter };
+    const minPrice = Number(req.query.minPrice);
+    const maxPrice = Number(req.query.maxPrice);
+
+    if (req.query.minPrice !== undefined && req.query.minPrice !== "" && Number.isFinite(minPrice) && minPrice >= 0) {
+        filter.price = { ...(filter.price || {}), $gte: minPrice };
+    }
+    if (req.query.maxPrice !== undefined && req.query.maxPrice !== "" && Number.isFinite(maxPrice) && maxPrice >= 0) {
+        filter.price = { ...(filter.price || {}), $lte: maxPrice };
+    }
+
+    // Keep each request responsive; pagination can be added as the inventory grows.
+    const allListings = await Listing.find(filter).sort({ _id: -1 }).limit(100);
+    res.render("listings/index.ejs", {
+        allListings,
+        search,
+        minPrice: req.query.minPrice || "",
+        maxPrice: req.query.maxPrice || ""
+    });
 };
 
 module.exports.renderNewForm = (req, res) => {

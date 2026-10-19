@@ -13,6 +13,6 @@ const userSchema = new Schema({
   passwordResetExpires: { type: Date, select: false },
 });
 
-userSchema.plugin(passportLocalMongoose.default);
+userSchema.plugin(passportLocalMongoose.default || passportLocalMongoose);
 
 module.exports = mongoose.model("User", userSchema);

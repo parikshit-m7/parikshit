@@ -2,7 +2,7 @@ const Listing = require("../models/listing");
 const { buildListingSearch } = require("../utils/listingSearch");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
-const geocodingClient = mbxGeocoding({ accessToken: mapToken });
+const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : null;
 
 
 module.exports.index = async (req, res) => {
@@ -35,9 +35,10 @@ module.exports.showListing = async (req, res) => {
 
     // Old listings ke missing coordinates fix karo
     if (
-        !listing.geometry ||
+        geocodingClient &&
+        (!listing.geometry ||
         !listing.geometry.coordinates ||
-        listing.geometry.coordinates.length !== 2
+        listing.geometry.coordinates.length !== 2)
     ) {
         try {
             const response = await geocodingClient
@@ -61,27 +62,25 @@ module.exports.showListing = async (req, res) => {
 
 
 module.exports.createListing = ( async (req, res,next) => {
-  let response = await geocodingClient
-    .forwardGeocode({
-      query: req.body.listing.location,
-      limit: 1
-    })
-    .send();
+  let geocodedGeometry;
+  if (geocodingClient) {
+    const response = await geocodingClient
+      .forwardGeocode({ query: req.body.listing.location, limit: 1 })
+      .send();
+    if (response.body.features && response.body.features.length > 0) {
+      geocodedGeometry = response.body.features[0].geometry;
+    }
+  }
 
     if (!req.file) {
       req.flash("error", "Please upload a listing image.");
       return res.redirect("/listings/new");
     }
-    if (!response.body.features || response.body.features.length === 0) {
-      req.flash("error", "We couldn't find that location. Please enter a more specific location.");
-      return res.redirect("/listings/new");
-    }
-
     const { path: url, filename } = req.file;
     const newListing = new Listing(req.body.listing);
     newListing.owner = req.user._id;
     newListing.image = { url, filename };
-    newListing.geometry = response.body.features[0].geometry;
+    if (geocodedGeometry) newListing.geometry = geocodedGeometry;
     let savedListing = await newListing.save();
     console.log(savedListing);
     req.flash("success","New Listing Created!");
@@ -116,7 +115,7 @@ module.exports.updateListing = async (req, res) => {
     listing.image = { url: req.file.path, filename: req.file.filename };
   }
 
-  if (req.body.listing.location) {
+  if (req.body.listing.location && geocodingClient) {
     const response = await geocodingClient
       .forwardGeocode({ query: req.body.listing.location, limit: 1 })
       .send();

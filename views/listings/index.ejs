@@ -59,7 +59,52 @@
 
 </div>
 
+<section class="listing-filter-panel" aria-label="Filter listings">
+  <div class="listing-filter-heading">
+    <div>
+      <h2>Refine your search</h2>
+      <p>Set a nightly budget to narrow down your stays.</p>
+    </div>
+    <span class="listing-filter-count">
+      <strong><%= allListings.length %></strong>
+      <%= allListings.length === 1 ? "stay found" : "stays found" %>
+    </span>
+  </div>
 
+  <form action="/listings" method="GET" class="row g-3 align-items-end">
+    <input type="hidden" name="search" value="<%= filters.search %>">
+    <div class="col-6 col-md-3">
+      <label for="min-price" class="form-label">Minimum price / night</label>
+      <input
+        class="form-control"
+        type="number"
+        id="min-price"
+        name="minPrice"
+        min="0"
+        step="1"
+        value="<%= filters.minPrice %>"
+        placeholder="No minimum">
+    </div>
+    <div class="col-6 col-md-3">
+      <label for="max-price" class="form-label">Maximum price / night</label>
+      <input
+        class="form-control"
+        type="number"
+        id="max-price"
+        name="maxPrice"
+        min="0"
+        step="1"
+        value="<%= filters.maxPrice %>"
+        placeholder="No maximum">
+    </div>
+    <div class="col-12 col-md-auto listing-filter-actions">
+      <button class="btn add-btn" type="submit">Apply filters</button>
+      <a class="btn btn-outline-secondary" href="/listings">Clear filters</a>
+    </div>
+  </form>
+</section>
+
+<% if (allListings.length > 0) { %>
   <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
   <% for(let listing of allListings) { %>
     <a href="/listings/<%= listing.id %>" 
@@ -82,7 +127,14 @@
   </div>
   </a>
   <% } %> 
-</div>
+  </div>
+<% } else { %>
+  <div class="listing-empty-state">
+    <h2>No stays match those filters</h2>
+    <p>Try another destination or widen your nightly price range.</p>
+    <a class="btn add-btn" href="/listings">Clear filters</a>
+  </div>
+<% } %>
 
 <script>
   let taxSwitch = document.getElementById("flexSwitchCheckDefault");

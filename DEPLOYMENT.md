@@ -26,3 +26,6 @@ Use a real email provider's SMTP settings; do not use placeholder credentials. U
 
 ## Inventory scale
 The listing page now limits each result page request to 100 records and supports text search and min/max price filters. For very large inventories, add database indexes and cursor/page-based pagination and import verified listing data from a licensed source. Do not seed millions of fabricated properties.
+
+## Gmail SMTP quick setup
+For a Gmail mailbox, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, and `SMTP_SECURE=true`. Set `SMTP_USER` to the sending Gmail address, `SMTP_PASS` to a Google App Password (not the normal Gmail login password), and `MAIL_FROM` to that same verified sending address. The app's public HTTPS address must be set as `APP_BASE_URL`. Create the App Password in the Google Account security settings after enabling 2-Step Verification. Never commit these values to the repository or share the App Password in chat.

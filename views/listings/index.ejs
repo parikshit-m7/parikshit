@@ -32,7 +32,14 @@
     <a class="destination-tile" href="/listings?search=London"><span class="destination-icon"><i class="fa-solid fa-compass"></i></span><span><strong>London</strong><small>UK · City adventures</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
   </div>
 </section>
-\n<div class="section-heading" id="stays">
+\n<form class="price-filter" action="/listings" method="GET">
+  <input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
+  <label for="minPrice">Min price ₹</label><input id="minPrice" type="number" name="minPrice" min="0" step="100" value="<%= typeof minPrice !== 'undefined' ? minPrice : '' %>" placeholder="Any">
+  <label for="maxPrice">Max price ₹</label><input id="maxPrice" type="number" name="maxPrice" min="0" step="100" value="<%= typeof maxPrice !== 'undefined' ? maxPrice : '' %>" placeholder="Any">
+  <button type="submit">Apply price</button><a href="/listings#stays">Clear</a>
+</form>
+
+<div class="section-heading" id="stays">
   <div>
     <div class="section-kicker">The collection</div>
     <h2 class="section-title"><%= typeof search !== 'undefined' && search ? 'Places matching your search' : 'Places worth the detour' %></h2>

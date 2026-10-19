@@ -38,7 +38,19 @@ module.exports.renderForgotPassword = (req, res) => {
 
 module.exports.requestPasswordReset = async (req, res) => {
   const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const genericMessage = "If an account with that email exists, password reset instructions will be sent shortly.";
+  const emailReady = Boolean(
+    process.env.SMTP_USER &&
+    process.env.SMTP_PASS &&
+    process.env.MAIL_FROM
+  );
+
+  // Avoid pretending an email was sent when the deployment has no mail credentials.
+  if (!emailReady) {
+    console.error("Password reset email is not configured. Set SMTP_USER, SMTP_PASS, and MAIL_FROM in Render.");
+    req.flash("error", "Password reset email is not configured on the website yet. Please contact the site administrator.");
+    return res.redirect("/forgot-password");
+  }
+
   const user = email ? await User.findOne({ email }).select("+passwordResetToken +passwordResetExpires") : null;
 
   if (user) {
@@ -47,43 +59,38 @@ module.exports.requestPasswordReset = async (req, res) => {
     user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
-    const baseUrl = (process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    const baseUrl = (process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\\/$/, "");
     const resetUrl = `${baseUrl}/reset-password/${rawToken}`;
+    const port = Number(process.env.SMTP_PORT || 465);
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port,
+      secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
 
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.MAIL_FROM) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT || 587),
-        secure: process.env.SMTP_SECURE === "true",
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    try {
+      await transporter.sendMail({
+        from: process.env.MAIL_FROM,
+        to: user.email,
+        subject: "Reset your Wanderlust password",
+        text: `We received a request to reset your Wanderlust password. This link expires in 15 minutes and can be used once: ${resetUrl}\\n\\nIf you didn't request this, you can ignore this email.`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Use the button below to choose a new password. This link expires in 15 minutes and can only be used once.</p><p><a href="${resetUrl}" style="display:inline-block;background:#244b3e;color:white;padding:13px 20px;border-radius:24px;text-decoration:none">Reset password</a></p><p>If you didn't request this, you can safely ignore this email.</p></div>`,
       });
-      try {
-        await transporter.sendMail({
-          from: process.env.MAIL_FROM,
-          to: user.email,
-          subject: "Reset your Wanderlust password",
-          text: `We received a request to reset your Wanderlust password. This link expires in 15 minutes and can be used once: ${resetUrl}\n\nIf you didn't request this, you can ignore this email.`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Use the button below to choose a new password. This link expires in 15 minutes and can only be used once.</p><p><a href="${resetUrl}" style="display:inline-block;background:#244b3e;color:white;padding:13px 20px;border-radius:24px;text-decoration:none">Reset password</a></p><p>If you didn't request this, you can safely ignore this email.</p></div>`,
-        });
-      } catch (err) {
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        await user.save();
-        console.error("Password reset email could not be sent:", err.message);
-      }
-    } else {
-      // Never email reset links until SMTP is configured; clear token to avoid unusable links.
+    } catch (err) {
       user.passwordResetToken = undefined;
       user.passwordResetExpires = undefined;
       await user.save();
-      console.warn("Password reset requested but SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM are not configured.");
+      console.error("Password reset email could not be sent:", err.message);
+      req.flash("error", "We couldn't send the reset email. Check the email service settings and try again.");
+      return res.redirect("/forgot-password");
     }
   }
 
-  req.flash("success", genericMessage);
+  // Same success message whether or not an account exists.
+  req.flash("success", "If an account with that email exists, password reset instructions will be sent shortly.");
   res.redirect("/forgot-password");
 };
-
 module.exports.renderResetPassword = async (req, res) => {
   const tokenHash = crypto.createHash("sha256").update(req.params.token).digest("hex");
   const user = await User.findOne({

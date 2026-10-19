@@ -1,4 +1,3 @@
-const { response } = require("express");
 const Listing = require("../models/listing");
 const { buildListingSearch } = require("../utils/listingSearch");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
@@ -69,12 +68,19 @@ module.exports.createListing = ( async (req, res,next) => {
     })
     .send();
 
-    let url = req.file.path;
-    let filename = req.file.filename;
+    if (!req.file) {
+      req.flash("error", "Please upload a listing image.");
+      return res.redirect("/listings/new");
+    }
+    if (!response.body.features || response.body.features.length === 0) {
+      req.flash("error", "We couldn't find that location. Please enter a more specific location.");
+      return res.redirect("/listings/new");
+    }
+
+    const { path: url, filename } = req.file;
     const newListing = new Listing(req.body.listing);
     newListing.owner = req.user._id;
-    newListing.image = {url, filename};
-
+    newListing.image = { url, filename };
     newListing.geometry = response.body.features[0].geometry;
     let savedListing = await newListing.save();
     console.log(savedListing);
@@ -89,8 +95,7 @@ module.exports.renderEditForm =( async (req, res) => {
     req.flash("error","Listing you reqursted for does not exist!");
     return res.redirect("/listings");
   }
-  let originalImageUrl = listing.image.url;
-  originalImageUrl.replace("/upload","/upload/h_300,W_250");
+  let originalImageUrl = listing.image?.url || "";
   res.render("listings/edit.ejs", { listing, originalImageUrl });
 })
 
@@ -98,22 +103,30 @@ module.exports.renderEditForm =( async (req, res) => {
 module.exports.updateListing = async (req, res) => {
   let { id } = req.params;
 
-  let listing = await Listing.findByIdAndUpdate(id, {
-    ...req.body.listing
-  });
-
-  // Location change hone par coordinates bhi update honge
-  let response = await geocodingClient
-    .forwardGeocode({
-      query: req.body.listing.location,
-      limit: 1
-    })
-    .send();
-
-  if (response.body.features.length > 0) {
-    listing.geometry = response.body.features[0].geometry;
-    await listing.save();
+  const listing = await Listing.findById(id);
+  if (!listing) {
+    req.flash("error", "Listing you requested does not exist!");
+    return res.redirect("/listings");
   }
+
+  Object.assign(listing, req.body.listing);
+
+  // Keep the existing photo unless a new one was uploaded.
+  if (req.file) {
+    listing.image = { url: req.file.path, filename: req.file.filename };
+  }
+
+  if (req.body.listing.location) {
+    const response = await geocodingClient
+      .forwardGeocode({ query: req.body.listing.location, limit: 1 })
+      .send();
+
+    if (response.body.features && response.body.features.length > 0) {
+      listing.geometry = response.body.features[0].geometry;
+    }
+  }
+
+  await listing.save();
 
   req.flash("success", "Listing Updated!");
   res.redirect(`/listings/${id}`);

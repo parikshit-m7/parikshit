@@ -4,19 +4,17 @@
     <div class="brand-mark auth-brand-mark">✦</div>
     <p class="auth-eyebrow">PHONE VERIFIED</p>
     <h1 class="auth-title">Finish creating your account</h1>
-    <p class="auth-subtitle">Your mobile number is verified. Choose a password to finish signup.</p>
+    <p class="auth-subtitle">Your mobile number is verified. Choose a username and password to finish signup.</p>
 
     <form action="/complete-phone-signup" method="post" class="needs-validation" novalidate>
       <div class="mb-3">
         <label class="form-label" for="verified-phone">Verified mobile number</label>
         <input id="verified-phone" type="tel" class="form-control auth-input" value="<%= phone %>" readonly />
       </div>
-      <% if (username) { %>
-        <div class="mb-3">
-          <label class="form-label" for="verified-username">Username</label>
-          <input id="verified-username" type="text" class="form-control auth-input" value="<%= username %>" readonly />
-        </div>
-      <% } %>
+      <div class="mb-3">
+        <label class="form-label" for="username">Username</label>
+        <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="username" maxlength="40" value="<%= username || '' %>" placeholder="Choose a username" required />
+      </div>
       <div class="mb-3">
         <label class="form-label" for="password">Password</label>
         <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" required />

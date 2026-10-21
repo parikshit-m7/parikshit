@@ -174,16 +174,11 @@ function normalizePhoneNumber(value) {
 
 module.exports.sendPhoneSignupOtp = async (req, res) => {
   try {
-    const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
     const rawPhone = typeof req.body.phone === "string" ? req.body.phone.trim() : "";
     const phone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
 
     if (!phone) {
       req.flash("error", "Enter a valid mobile number to verify your account.");
-      return res.redirect("/signup");
-    }
-    if (username.length > 40) {
-      req.flash("error", "Your username must be 40 characters or fewer.");
       return res.redirect("/signup");
     }
     if (phone && await User.findOne({ phone })) {
@@ -198,7 +193,6 @@ module.exports.sendPhoneSignupOtp = async (req, res) => {
 
     await callTwilioVerify("Verifications", { To: phone, Channel: "sms" });
     req.session.pendingPhoneSignup = {
-      username,
       phone,
       createdAt: Date.now(),
       otpSentAt: Date.now(),
@@ -280,7 +274,7 @@ module.exports.renderCompletePhoneSignup = (req, res) => {
     req.flash("error", "Verify your mobile number before finishing signup.");
     return res.redirect("/signup");
   }
-  res.render("users/complete-phone-signup.ejs", { username: pending.username, phone: pending.phone });
+  res.render("users/complete-phone-signup.ejs", { username: pending.username || "", phone: pending.phone });
 };
 
 module.exports.completePhoneSignup = async (req, res, next) => {
@@ -290,9 +284,25 @@ module.exports.completePhoneSignup = async (req, res, next) => {
     req.flash("error", "Your verification expired. Please start signup again.");
     return res.redirect("/signup");
   }
+  const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
   const password = typeof req.body.password === "string" ? req.body.password : "";
+  if (!username) {
+    req.flash("error", "Choose a username to finish creating your account.");
+    return res.redirect("/complete-phone-signup");
+  }
+  if (username.length > 40) {
+    pending.username = username.slice(0, 40);
+    req.flash("error", "Your username must be 40 characters or fewer.");
+    return res.redirect("/complete-phone-signup");
+  }
   if (password.length < 8) {
+    pending.username = username;
     req.flash("error", "Choose a password with at least 8 characters.");
+    return res.redirect("/complete-phone-signup");
+  }
+  if (await User.findOne({ username })) {
+    pending.username = username;
+    req.flash("error", "That username is already taken. Please choose another one.");
     return res.redirect("/complete-phone-signup");
   }
   if (await User.findOne({ phone: pending.phone })) {
@@ -303,7 +313,7 @@ module.exports.completePhoneSignup = async (req, res, next) => {
 
   try {
     const registerUser = await User.register(new User({
-      username: pending.username || pending.phone,
+      username,
       phone: pending.phone,
     }), password);
     delete req.session.pendingPhoneSignup;

@@ -24,9 +24,11 @@ module.exports.startGoogleLogin = (req, res) => {
   const state = crypto.randomBytes(32).toString("hex");
   const codeVerifier = crypto.randomBytes(48).toString("base64url");
   const codeChallenge = crypto.createHash("sha256").update(codeVerifier).digest("base64url");
+  const intent = req.query.intent === "signup" ? "signup" : "login";
   req.session.googleOAuth = {
     state,
     codeVerifier,
+    intent,
     createdAt: Date.now(),
   };
 
@@ -99,11 +101,14 @@ module.exports.finishGoogleLogin = async (req, res) => {
         }
         user.googleId = profile.sub;
         await user.save();
-      } else {
+      } else if (oauth.intent === "signup") {
         user = await User.register(
           new User({ username: email, email, googleId: profile.sub }),
           crypto.randomBytes(32).toString("hex")
         );
+      } else {
+        req.flash("error", "No Wanderlust account is linked to this Google account. Create an account first.");
+        return res.redirect("/login");
       }
     }
 
@@ -188,11 +193,11 @@ module.exports.prepareLogin = async (req, res, next) => {
     ? req.body.identifier.trim()
     : (typeof req.body.username === "string" ? req.body.username.trim() : "");
   if (!identifier) {
-    req.flash("error", "Enter your username, email, or mobile number.");
+    req.flash("error", "Enter your email, username, or mobile number.");
     return res.redirect("/login");
   }
 
-  const matches = [{ username: identifier }];
+  const matches = [{ username: identifier }, { email: identifier.toLowerCase() }];
   const phone = normalizePhoneNumber(identifier);
   if (phone) matches.push({ phone });
 

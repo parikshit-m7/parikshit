@@ -8,13 +8,13 @@
 
     <form action="/complete-phone-signup" method="post" class="needs-validation" novalidate>
       <div class="mb-3">
-        <label class="form-label" for="username">Username</label>
-        <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="username" maxlength="40" value="<%= username || '' %>" placeholder="Choose a username" required />
+        <label class="visually-hidden" for="username">Username</label>
+        <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="username" maxlength="40" value="<%= username || '' %>" placeholder="Username" required />
       </div>
       <div class="mb-3">
-        <label class="form-label" for="password">Password</label>
-        <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" required />
-        <div class="form-text auth-help">Use at least 8 characters.</div>
+        <label class="visually-hidden" for="password">Password</label>
+        <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" placeholder="Password" aria-describedby="password-length-hint" data-length-hint="password-length-hint" required />
+        <div id="password-length-hint" class="form-text auth-help" aria-live="polite" hidden>Use at least 8 characters.</div>
       </div>
       <button type="submit" class="auth-submit-btn">Create account</button>
     </form>

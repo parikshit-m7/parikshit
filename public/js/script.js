@@ -16,4 +16,16 @@
     }, 
     false)
   });
+
+  document.querySelectorAll('[data-length-hint]').forEach(input => {
+    const hint = document.getElementById(input.dataset.lengthHint)
+    if (!hint) return
+
+    const updateHint = () => {
+      hint.hidden = input.value.length === 0 || input.validity.valid
+    }
+
+    input.addEventListener('input', updateHint)
+    updateHint()
+  })
 })();

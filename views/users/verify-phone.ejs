@@ -6,10 +6,11 @@
     <h1 class="auth-title">Verify your mobile number</h1>
     <p class="auth-subtitle">Enter the 6-digit code sent to <strong><%= phone.slice(0, -4).replace(/\d/g, "•") %><%= phone.slice(-4) %></strong>.</p>
 
-    <form action="/verify-phone" method="post">
+    <form action="/verify-phone" method="post" class="needs-validation" novalidate>
       <div class="mb-3">
-        <label for="otp" class="form-label">6-digit code</label>
-        <input name="otp" id="otp" type="text" class="form-control auth-input text-center" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="123456" required autofocus />
+        <label for="otp" class="visually-hidden">6-digit code</label>
+        <input name="otp" id="otp" type="text" class="form-control auth-input text-center" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="6-digit code" aria-describedby="otp-length-hint" data-length-hint="otp-length-hint" required autofocus />
+        <div id="otp-length-hint" class="form-text auth-help" aria-live="polite" hidden>Enter the full 6-digit code.</div>
       </div>
       <button type="submit" class="auth-submit-btn">Verify number</button>
     </form>

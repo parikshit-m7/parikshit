@@ -19,7 +19,7 @@ router.route("/login")
     userController.prepareLogin,
     passport.authenticate("local", {
       failureRedirect: "/login",
-      failureFlash: true,
+      failureFlash: "Incorrect email, username, mobile number, or password.",
     }),
     userController.login
   );

@@ -4,10 +4,59 @@ const User = require("../models/user");
 
 module.exports.renderSignupForm = (req, res) => res.render("users/signup.ejs");
 
+function normalizePhoneNumber(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!/^[+0-9\\s().-]+$/.test(trimmed)) return null;
+  const digits = trimmed.replace(/\\D/g, "");
+  if (digits.length < 8 || digits.length > 15) return null;
+  if (trimmed.startsWith("+")) return `+${digits}`;
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 11 && digits.startsWith("0")) return `+91${digits.slice(1)}`;
+  return `+${digits}`;
+}
+
 module.exports.signup = async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
-    const registerUser = await User.register(new User({ email, username }), password);
+    const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
+    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const rawPhone = typeof req.body.phone === "string" ? req.body.phone.trim() : "";
+    const password = typeof req.body.password === "string" ? req.body.password : "";
+    const phone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
+
+    if (!email && !phone) {
+      req.flash("error", "Enter an email address or mobile number to create your account.");
+      return res.redirect("/signup");
+    }
+    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      req.flash("error", "Enter a valid email address.");
+      return res.redirect("/signup");
+    }
+    if (rawPhone && !phone) {
+      req.flash("error", "Enter a valid mobile number with country code.");
+      return res.redirect("/signup");
+    }
+    if (password.length < 8) {
+      req.flash("error", "Choose a password with at least 8 characters.");
+      return res.redirect("/signup");
+    }
+
+    const accountMatch = [];
+    if (email) accountMatch.push({ email });
+    if (phone) accountMatch.push({ phone });
+    if (await User.findOne({ $or: accountMatch })) {
+      req.flash("error", "An account already uses that email or mobile number. Please log in.");
+      return res.redirect("/signup");
+    }
+
+    const registerUser = await User.register(
+      new User({
+        username: username || email || phone,
+        email: email || undefined,
+        phone: phone || undefined,
+      }),
+      password
+    );
     req.login(registerUser, (err) => {
       if (err) return next(err);
       req.flash("success", "Welcome to Wanderlust!");
@@ -20,6 +69,30 @@ module.exports.signup = async (req, res, next) => {
 };
 
 module.exports.renderLogin = (req, res) => res.render("users/login.ejs");
+
+module.exports.prepareLogin = async (req, res, next) => {
+  const identifier = typeof req.body.identifier === "string"
+    ? req.body.identifier.trim()
+    : (typeof req.body.username === "string" ? req.body.username.trim() : "");
+  if (!identifier) {
+    req.flash("error", "Enter your username, email, or mobile number.");
+    return res.redirect("/login");
+  }
+
+  const matches = [{ username: identifier }];
+  if (identifier.includes("@")) matches.push({ email: identifier.toLowerCase() });
+  const phone = normalizePhoneNumber(identifier);
+  if (phone) matches.push({ phone });
+
+  const user = await User.findOne({ $or: matches });
+  if (!user) {
+    req.flash("error", "We couldn't find an account with those details.");
+    return res.redirect("/login");
+  }
+  req.body.username = user.username;
+  next();
+};
+
 module.exports.login = async (req, res) => {
   req.flash("success", "Welcome back to Wanderlust!");
   res.redirect(res.locals.redirectUrl || "/listings");

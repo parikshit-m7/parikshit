@@ -5,9 +5,14 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const userSchema = new Schema({
   email: {
     type: String,
-    required: true,
     trim: true,
     lowercase: true,
+  },
+  phone: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
   },
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },

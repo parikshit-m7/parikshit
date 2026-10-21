@@ -14,6 +14,11 @@ const userSchema = new Schema({
     unique: true,
     sparse: true,
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
   passwordResetAttempts: { type: Number, default: 0, select: false },

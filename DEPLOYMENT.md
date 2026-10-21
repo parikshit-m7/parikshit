@@ -23,3 +23,14 @@ In Resend, verify a domain you control and use a sender address on that domain f
 
 ## Inventory scale
 The listing page now limits each result page request to 100 records and supports text search and min/max price filters. For very large inventories, add database indexes and cursor/page-based pagination and import verified data from a licensed source. Do not seed millions of fabricated properties.
+
+
+## Google sign-in
+
+The login and signup forms include a Google sign-in option. To enable it, create a **Web application** OAuth client in Google Cloud Console and add the following environment variables in Render:
+
+- `GOOGLE_CLIENT_ID`: the OAuth client ID from Google Cloud.
+- `GOOGLE_CLIENT_SECRET`: the OAuth client secret. Keep it private.
+- `GOOGLE_REDIRECT_URI`: `https://parikshit-4kjm.onrender.com/auth/google/callback`.
+
+Add that same callback address under the OAuth client's **Authorized redirect URIs**. Save the variables and redeploy the service. Google sign-in verifies the email address and creates an account on first sign-in; a verified Google email is linked to an existing account with that email.

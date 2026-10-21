@@ -2,6 +2,125 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const User = require("../models/user");
 
+async function postForm(url, values) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(values),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error("Google sign-in request failed.");
+  return response.json();
+}
+
+module.exports.startGoogleLogin = (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    req.flash("error", "Google sign-in setup is not finished yet. You can use your email or mobile number for now.");
+    return res.redirect("/login");
+  }
+
+  const state = crypto.randomBytes(32).toString("hex");
+  const codeVerifier = crypto.randomBytes(48).toString("base64url");
+  const codeChallenge = crypto.createHash("sha256").update(codeVerifier).digest("base64url");
+  req.session.googleOAuth = {
+    state,
+    codeVerifier,
+    createdAt: Date.now(),
+  };
+
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI
+    || `${req.protocol}://${req.get("host")}/auth/google/callback`;
+  const authorizationUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  authorizationUrl.search = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+    prompt: "select_account",
+  }).toString();
+
+  res.redirect(authorizationUrl.toString());
+};
+
+module.exports.finishGoogleLogin = async (req, res) => {
+  const oauth = req.session.googleOAuth;
+  delete req.session.googleOAuth;
+  const { code, state, error } = req.query;
+  const validState = typeof state === "string"
+    && typeof oauth?.state === "string"
+    && state.length === oauth.state.length
+    && crypto.timingSafeEqual(Buffer.from(state), Buffer.from(oauth.state));
+
+  if (error || !code || !validState || !oauth?.codeVerifier
+    || Date.now() - oauth.createdAt > 10 * 60 * 1000) {
+    req.flash("error", "Google sign-in was cancelled or expired. Please try again.");
+    return res.redirect("/login");
+  }
+
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI
+      || `${req.protocol}://${req.get("host")}/auth/google/callback`;
+    if (!clientId || !clientSecret) throw new Error("Google sign-in is not configured.");
+
+    const tokens = await postForm("https://oauth2.googleapis.com/token", {
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+      code_verifier: oauth.codeVerifier,
+    });
+    if (!tokens.access_token) throw new Error("Google did not return an access token.");
+
+    const profileResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!profileResponse.ok) throw new Error("Could not verify the Google account.");
+    const profile = await profileResponse.json();
+    const email = typeof profile.email === "string" ? profile.email.trim().toLowerCase() : "";
+    if (!profile.sub || !email || profile.email_verified !== true) {
+      throw new Error("Google account email is not verified.");
+    }
+
+    let user = await User.findOne({ googleId: profile.sub });
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user) {
+        if (user.googleId && user.googleId !== profile.sub) {
+          throw new Error("This email is linked to a different Google account.");
+        }
+        user.googleId = profile.sub;
+        await user.save();
+      } else {
+        user = await User.register(
+          new User({ username: email, email, googleId: profile.sub }),
+          crypto.randomBytes(32).toString("hex")
+        );
+      }
+    }
+
+    const redirectUrl = req.session.redirectUrl || "/listings";
+    delete req.session.redirectUrl;
+    await new Promise((resolve, reject) => {
+      req.login(user, (loginError) => loginError ? reject(loginError) : resolve());
+    });
+    req.flash("success", "Signed in with Google. Welcome to Wanderlust!");
+    res.redirect(redirectUrl);
+  } catch (err) {
+    console.error("Google sign-in failed:", err.message);
+    req.flash("error", "We couldn't sign you in with Google. Please try again or use your email/mobile and password.");
+    res.redirect("/login");
+  }
+};
+
 module.exports.renderSignupForm = (req, res) => res.render("users/signup.ejs");
 
 function normalizePhoneNumber(value) {

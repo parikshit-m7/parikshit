@@ -28,9 +28,13 @@ module.exports.renderForgotPassword = (req, res) => res.render("users/forgot-pas
 
 module.exports.requestPasswordReset = async (req, res) => {
   const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.MAIL_FROM) {
-    console.error("Password reset email is not configured. Set SMTP_USER, SMTP_PASS, and MAIL_FROM.");
-    req.flash("error", "Email OTP is not configured yet. The site administrator must add Gmail SMTP settings.");
+
+  // Prefer an HTTPS email API because Render Free blocks outbound SMTP ports.
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const mailFrom = process.env.MAIL_FROM;
+  if (!resendApiKey || !mailFrom) {
+    console.error("Password reset email is not configured. Set RESEND_API_KEY and MAIL_FROM in Render.");
+    req.flash("error", "Email OTP is not configured yet. The site administrator must configure the email API.");
     return res.redirect("/forgot-password");
   }
 
@@ -46,29 +50,28 @@ module.exports.requestPasswordReset = async (req, res) => {
   user.passwordResetAttempts = 0;
   await user.save();
 
-  const port = Number(process.env.SMTP_PORT || 465);
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port,
-    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    // Fail quickly instead of leaving the forgot-password page spinning forever.
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-
   try {
-    await Promise.race([
-      transporter.sendMail({
-      from: process.env.MAIL_FROM,
-      to: user.email,
-      subject: "Your Wanderlust password reset OTP",
-      text: `Your Wanderlust password reset code is ${otp}. It expires in 10 minutes and can be used only once. If you did not request this, ignore this email.`,
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Your one-time code expires in 10 minutes.</p><div style="font-size:32px;letter-spacing:8px;font-weight:bold;background:#f3f6f4;padding:18px;text-align:center;border-radius:12px">${otp}</div><p>If you did not request this code, ignore this email.</p></div>`,
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: mailFrom,
+        to: [user.email],
+        subject: "Your Wanderlust password reset OTP",
+        text: `Your Wanderlust password reset code is ${otp}. It expires in 10 minutes and can be used only once. If you did not request this, ignore this email.`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Your one-time code expires in 10 minutes.</p><div style="font-size:32px;letter-spacing:8px;font-weight:bold;background:#f3f6f4;padding:18px;text-align:center;border-radius:12px">${otp}</div><p>If you did not request this code, ignore this email.</p></div>`,
       }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Email sending timed out after 15 seconds. Check Render SMTP connectivity and Gmail App Password.")), 15000)),
-    ]);
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Email API returned HTTP ${response.status}: ${details.slice(0, 500)}`);
+    }
+
     req.session.passwordResetEmail = user.email;
     delete req.session.passwordResetUserId;
   } catch (err) {
@@ -77,9 +80,10 @@ module.exports.requestPasswordReset = async (req, res) => {
     user.passwordResetAttempts = 0;
     await user.save();
     console.error("Password reset OTP could not be sent:", err.message);
-    req.flash("error", "We couldn't send the OTP. Please check the email settings and try again.");
+    req.flash("error", "We couldn't send the OTP. Please check the email API settings and sender verification.");
     return res.redirect("/forgot-password");
   }
+
   req.flash("success", "An OTP has been sent to your email address.");
   res.redirect("/verify-otp");
 };

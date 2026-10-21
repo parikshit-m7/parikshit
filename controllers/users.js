@@ -138,17 +138,16 @@ function normalizePhoneNumber(value) {
 module.exports.signup = async (req, res, next) => {
   try {
     const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
-    const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const rawPhone = typeof req.body.phone === "string" ? req.body.phone.trim() : "";
     const password = typeof req.body.password === "string" ? req.body.password : "";
     const phone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
 
-    if (!email && !phone) {
-      req.flash("error", "Enter an email address or mobile number to create your account.");
+    if (!username && !phone) {
+      req.flash("error", "Enter a username or mobile number to create your account.");
       return res.redirect("/signup");
     }
-    if (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
-      req.flash("error", "Enter a valid email address.");
+    if (username.length > 40) {
+      req.flash("error", "Your username must be 40 characters or fewer.");
       return res.redirect("/signup");
     }
     if (rawPhone && !phone) {
@@ -160,18 +159,14 @@ module.exports.signup = async (req, res, next) => {
       return res.redirect("/signup");
     }
 
-    const accountMatch = [];
-    if (email) accountMatch.push({ email });
-    if (phone) accountMatch.push({ phone });
-    if (await User.findOne({ $or: accountMatch })) {
-      req.flash("error", "An account already uses that email or mobile number. Please log in.");
+    if (phone && await User.findOne({ phone })) {
+      req.flash("error", "An account already uses that mobile number. Please log in.");
       return res.redirect("/signup");
     }
 
     const registerUser = await User.register(
       new User({
-        username: username || email || phone,
-        email: email || undefined,
+        username: username || phone,
         phone: phone || undefined,
       }),
       password
@@ -186,7 +181,6 @@ module.exports.signup = async (req, res, next) => {
     res.redirect("/signup");
   }
 };
-
 module.exports.renderLogin = (req, res) => res.render("users/login.ejs");
 
 module.exports.prepareLogin = async (req, res, next) => {
@@ -199,7 +193,6 @@ module.exports.prepareLogin = async (req, res, next) => {
   }
 
   const matches = [{ username: identifier }];
-  if (identifier.includes("@")) matches.push({ email: identifier.toLowerCase() });
   const phone = normalizePhoneNumber(identifier);
   if (phone) matches.push({ phone });
 

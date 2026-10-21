@@ -10,7 +10,13 @@ router.get("/auth/google/callback", wrapAsync(userController.finishGoogleLogin))
 
 router.route("/signup")
   .get(userController.renderSignupForm)
-  .post(wrapAsync(userController.signup));
+  .post(wrapAsync(userController.sendPhoneSignupOtp));
+
+router.get("/verify-phone", userController.renderPhoneSignupOtp);
+router.post("/verify-phone", wrapAsync(userController.verifyPhoneSignupOtp));
+router.post("/verify-phone/resend", wrapAsync(userController.resendPhoneSignupOtp));
+router.get("/complete-phone-signup", userController.renderCompletePhoneSignup);
+router.post("/complete-phone-signup", wrapAsync(userController.completePhoneSignup));
 
 router.route("/login")
   .get(userController.renderLogin)

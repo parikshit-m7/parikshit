@@ -20,20 +20,13 @@
 
       <div class="mb-3">
         <label for="phone" class="form-label">Mobile number</label>
-        <input name="phone" id="phone" type="tel" class="form-control auth-input" autocomplete="tel" inputmode="tel" placeholder="+91 9876543210" />
+        <input name="phone" id="phone" type="tel" class="form-control auth-input" autocomplete="tel" inputmode="tel" placeholder="+91 9876543210" required />
       </div>
 
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" required />
-        <div class="form-text auth-help">Use at least 8 characters.</div>
-      </div>
-
-      <button type="submit" class="auth-submit-btn">Create account</button>
+      <button type="submit" class="auth-submit-btn">Send verification code</button>
     </form>
 
     <p class="auth-switch">Already have an account? <a href="/login">Log in</a></p>
     <p class="auth-legal">By continuing, you agree to Wanderlust's <a href="/Terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</p>
   </div>
 </section>
-

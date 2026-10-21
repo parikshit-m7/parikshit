@@ -21,6 +21,15 @@ Configure these in Render's Environment settings:
 
 In Resend, verify a domain you control and use a sender address on that domain for production email delivery. If using a test sender, Resend may restrict recipients to the account owner's verified email address. After adding the variables, save and redeploy/restart the Render service. Ask recipients to check Spam/Junk if the OTP doesn't arrive.
 
+## Phone verification for password signup
+Password-based signup sends an SMS OTP before allowing the user to set a password and create the account. It uses Twilio Verify. Create a Verify Service in Twilio Console, then set these in Render Environment settings:
+
+- `TWILIO_ACCOUNT_SID`: Twilio Account SID.
+- `TWILIO_AUTH_TOKEN`: Twilio Auth Token. Keep it private; never commit it or share it in chat.
+- `TWILIO_VERIFY_SERVICE_SID`: SID of the Twilio Verify Service (starts with `VA`).
+
+Save the variables and redeploy/restart the Render service. Twilio Verify is a paid service; SMS availability and requirements depend on the destination country and Twilio account configuration. Google signup does not require a phone number.
+
 ## Inventory scale
 The listing page now limits each result page request to 100 records and supports text search and min/max price filters. For very large inventories, add database indexes and cursor/page-based pagination and import verified data from a licensed source. Do not seed millions of fabricated properties.
 

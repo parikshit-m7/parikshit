@@ -128,11 +128,43 @@ module.exports.finishGoogleLogin = async (req, res) => {
 
 module.exports.renderSignupForm = (req, res) => res.render("users/signup.ejs");
 
+function getTwilioVerifyConfig() {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  return accountSid && authToken && serviceSid ? { accountSid, authToken, serviceSid } : null;
+}
+
+async function callTwilioVerify(endpoint, values) {
+  const config = getTwilioVerifyConfig();
+  if (!config) throw new Error("Phone verification is not configured.");
+  const auth = Buffer.from(`${config.accountSid}:${config.authToken}`).toString("base64");
+  const response = await fetch(
+    `https://verify.twilio.com/v2/Services/${config.serviceSid}/${endpoint}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(values),
+      signal: AbortSignal.timeout(15000),
+    }
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    const error = new Error(result.message || "Phone verification request failed.");
+    error.status = response.status;
+    throw error;
+  }
+  return result;
+}
+
 function normalizePhoneNumber(value) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (!/^[+0-9\\s().-]+$/.test(trimmed)) return null;
-  const digits = trimmed.replace(/\\D/g, "");
+  if (!/^[+0-9\s().-]+$/.test(trimmed)) return null;
+  const digits = trimmed.replace(/\D/g, "");
   if (digits.length < 8 || digits.length > 15) return null;
   if (trimmed.startsWith("+")) return `+${digits}`;
   if (digits.length === 10) return `+91${digits}`;
@@ -140,50 +172,149 @@ function normalizePhoneNumber(value) {
   return `+${digits}`;
 }
 
-module.exports.signup = async (req, res, next) => {
+module.exports.sendPhoneSignupOtp = async (req, res) => {
   try {
     const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
     const rawPhone = typeof req.body.phone === "string" ? req.body.phone.trim() : "";
-    const password = typeof req.body.password === "string" ? req.body.password : "";
     const phone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
 
-    if (!username && !phone) {
-      req.flash("error", "Enter a username or mobile number to create your account.");
+    if (!phone) {
+      req.flash("error", "Enter a valid mobile number to verify your account.");
       return res.redirect("/signup");
     }
     if (username.length > 40) {
       req.flash("error", "Your username must be 40 characters or fewer.");
       return res.redirect("/signup");
     }
-    if (rawPhone && !phone) {
-      req.flash("error", "Enter a valid mobile number with country code.");
-      return res.redirect("/signup");
-    }
-    if (password.length < 8) {
-      req.flash("error", "Choose a password with at least 8 characters.");
-      return res.redirect("/signup");
-    }
-
     if (phone && await User.findOne({ phone })) {
       req.flash("error", "An account already uses that mobile number. Please log in.");
       return res.redirect("/signup");
     }
 
-    const registerUser = await User.register(
-      new User({
-        username: username || phone,
-        phone: phone || undefined,
-      }),
-      password
-    );
+    if (!getTwilioVerifyConfig()) {
+      req.flash("error", "Phone OTP is not configured yet. Please try again later.");
+      return res.redirect("/signup");
+    }
+
+    await callTwilioVerify("Verifications", { To: phone, Channel: "sms" });
+    req.session.pendingPhoneSignup = {
+      username,
+      phone,
+      createdAt: Date.now(),
+      otpSentAt: Date.now(),
+    };
+    res.redirect("/verify-phone");
+  } catch (e) {
+    console.error("Phone signup OTP could not be sent:", e.message);
+    req.flash("error", "We couldn't send a verification code. Check the number and try again.");
+    res.redirect("/signup");
+  }
+};
+
+module.exports.resendPhoneSignupOtp = async (req, res) => {
+  const pending = req.session.pendingPhoneSignup;
+  if (!pending || pending.verified || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "Start signup again to request a fresh phone verification code.");
+    return res.redirect("/signup");
+  }
+  if (Date.now() - pending.otpSentAt < 30 * 1000) {
+    req.flash("error", "Please wait 30 seconds before requesting another code.");
+    return res.redirect("/verify-phone");
+  }
+  try {
+    await callTwilioVerify("Verifications", { To: pending.phone, Channel: "sms" });
+    pending.otpSentAt = Date.now();
+    req.flash("success", "A new verification code has been sent.");
+    res.redirect("/verify-phone");
+  } catch (e) {
+    console.error("Phone signup OTP resend failed:", e.message);
+    req.flash("error", "We couldn't send another code. Please try again shortly.");
+    res.redirect("/verify-phone");
+  }
+};
+
+module.exports.renderPhoneSignupOtp = (req, res) => {
+  const pending = req.session.pendingPhoneSignup;
+  if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "Start signup again to request a fresh phone verification code.");
+    return res.redirect("/signup");
+  }
+  res.render("users/verify-phone.ejs", { phone: pending.phone });
+};
+
+module.exports.verifyPhoneSignupOtp = async (req, res) => {
+  const pending = req.session.pendingPhoneSignup;
+  const code = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
+  if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "That verification code expired. Start signup again.");
+    return res.redirect("/signup");
+  }
+  if (!/^\d{6}$/.test(code)) {
+    req.flash("error", "Enter the 6-digit code sent to your mobile number.");
+    return res.redirect("/verify-phone");
+  }
+
+  try {
+    const result = await callTwilioVerify("VerificationCheck", { To: pending.phone, Code: code });
+    if (result.status !== "approved") {
+      req.flash("error", "That code is incorrect or expired. Please try again.");
+      return res.redirect("/verify-phone");
+    }
+    pending.verified = true;
+    pending.verifiedAt = Date.now();
+    res.redirect("/complete-phone-signup");
+  } catch (e) {
+    console.error("Phone signup OTP verification failed:", e.message);
+    req.flash("error", "We couldn't verify that code. Please try again.");
+    res.redirect("/verify-phone");
+  }
+};
+
+module.exports.renderCompletePhoneSignup = (req, res) => {
+  const pending = req.session.pendingPhoneSignup;
+  if (!pending?.verified || Date.now() - pending.verifiedAt > 10 * 60 * 1000) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "Verify your mobile number before finishing signup.");
+    return res.redirect("/signup");
+  }
+  res.render("users/complete-phone-signup.ejs", { username: pending.username, phone: pending.phone });
+};
+
+module.exports.completePhoneSignup = async (req, res, next) => {
+  const pending = req.session.pendingPhoneSignup;
+  if (!pending?.verified || Date.now() - pending.verifiedAt > 10 * 60 * 1000) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "Your verification expired. Please start signup again.");
+    return res.redirect("/signup");
+  }
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+  if (password.length < 8) {
+    req.flash("error", "Choose a password with at least 8 characters.");
+    return res.redirect("/complete-phone-signup");
+  }
+  if (await User.findOne({ phone: pending.phone })) {
+    delete req.session.pendingPhoneSignup;
+    req.flash("error", "An account already uses that mobile number. Please log in.");
+    return res.redirect("/login");
+  }
+
+  try {
+    const registerUser = await User.register(new User({
+      username: pending.username || pending.phone,
+      phone: pending.phone,
+    }), password);
+    delete req.session.pendingPhoneSignup;
     req.login(registerUser, (err) => {
       if (err) return next(err);
-      req.flash("success", "Welcome to Wanderlust!");
+      req.flash("success", "Mobile number verified. Welcome to Wanderlust!");
       res.redirect("/listings");
     });
   } catch (e) {
     req.flash("error", e.message);
-    res.redirect("/signup");
+    res.redirect("/complete-phone-signup");
   }
 };
 module.exports.renderLogin = (req, res) => res.render("users/login.ejs");

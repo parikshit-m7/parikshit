@@ -11,6 +11,7 @@ const userSchema = new Schema({
   },
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
+  passwordResetAttempts: { type: Number, default: 0, select: false },
 });
 
 userSchema.plugin(passportLocalMongoose.default || passportLocalMongoose);

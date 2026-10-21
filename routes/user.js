@@ -22,8 +22,11 @@ router.route("/login")
 
 router.get("/forgot-password", userController.renderForgotPassword);
 router.post("/forgot-password", wrapAsync(userController.requestPasswordReset));
+router.get("/verify-otp", userController.renderVerifyOtp);
+router.post("/verify-otp", wrapAsync(userController.verifyPasswordResetOtp));
 router.get("/reset-password/:token", wrapAsync(userController.renderResetPassword));
 router.post("/reset-password/:token", wrapAsync(userController.resetPassword));
+router.post("/reset-password", wrapAsync(userController.resetPassword));
 
 router.get("/logout", userController.logout);
 

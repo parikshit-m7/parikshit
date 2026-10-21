@@ -5,8 +5,6 @@
     <div class="brand-mark auth-brand-mark">✦</div>
     <p class="auth-eyebrow">START YOUR JOURNEY</p>
     <h1 class="auth-title">Create your Wanderlust account</h1>
-    <p class="auth-subtitle">Choose Google, or create an account with a username or mobile number.</p>
-
     <a href="/auth/google?intent=signup" class="google-signin-btn">
       <span class="google-mark" aria-hidden="true">G</span>
       <span>Continue with Google</span>
@@ -16,14 +14,13 @@
 
     <form action="/signup" method="post" class="needs-validation" novalidate>
       <div class="mb-3">
-        <label for="username" class="form-label">Username <span class="auth-optional">optional if you add a mobile number</span></label>
+        <label for="username" class="form-label">Username</label>
         <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="nickname" maxlength="40" placeholder="Choose a username" />
       </div>
 
       <div class="mb-3">
-        <label for="phone" class="form-label">Mobile number <span class="auth-optional">optional if you add a username</span></label>
+        <label for="phone" class="form-label">Mobile number</label>
         <input name="phone" id="phone" type="tel" class="form-control auth-input" autocomplete="tel" inputmode="tel" placeholder="+91 9876543210" />
-        <div class="form-text auth-help">Enter at least a username or mobile number. Either one works for future logins.</div>
       </div>
 
       <div class="mb-3">
@@ -39,3 +36,4 @@
     <p class="auth-legal">By continuing, you agree to Wanderlust's <a href="/Terms">Terms</a> and <a href="/privacy">Privacy Policy</a>.</p>
   </div>
 </section>
+

@@ -8,10 +8,6 @@
 
     <form action="/complete-phone-signup" method="post" class="needs-validation" novalidate>
       <div class="mb-3">
-        <label class="form-label" for="verified-phone">Verified mobile number</label>
-        <input id="verified-phone" type="tel" class="form-control auth-input" value="<%= phone %>" readonly />
-      </div>
-      <div class="mb-3">
         <label class="form-label" for="username">Username</label>
         <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="username" maxlength="40" value="<%= username || '' %>" placeholder="Choose a username" required />
       </div>

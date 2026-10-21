@@ -52,16 +52,23 @@ module.exports.requestPasswordReset = async (req, res) => {
     port,
     secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === "true" : port === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    // Fail quickly instead of leaving the forgot-password page spinning forever.
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 
   try {
-    await transporter.sendMail({
+    await Promise.race([
+      transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: user.email,
       subject: "Your Wanderlust password reset OTP",
       text: `Your Wanderlust password reset code is ${otp}. It expires in 10 minutes and can be used only once. If you did not request this, ignore this email.`,
       html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Your one-time code expires in 10 minutes.</p><div style="font-size:32px;letter-spacing:8px;font-weight:bold;background:#f3f6f4;padding:18px;text-align:center;border-radius:12px">${otp}</div><p>If you did not request this code, ignore this email.</p></div>`,
-    });
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Email sending timed out after 15 seconds. Check Render SMTP connectivity and Gmail App Password.")), 15000)),
+    ]);
     req.session.passwordResetEmail = user.email;
     delete req.session.passwordResetUserId;
   } catch (err) {

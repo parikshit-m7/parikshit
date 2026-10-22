@@ -1,0 +1,21 @@
+<% layout("/layouts/boilerplate") %>
+<section class="auth-shell">
+  <div class="auth-card">
+    <div class="brand-mark auth-brand-mark">✦</div>
+    <p class="auth-eyebrow">GOOGLE ACCOUNT CONNECTED</p>
+    <h1 class="auth-title">Finish creating your account</h1>
+    <p class="auth-subtitle"><%= email %></p>
+    <form action="/complete-google-signup" method="post" class="needs-validation" novalidate>
+      <div class="mb-3">
+        <label class="visually-hidden" for="username">Username</label>
+        <input name="username" id="username" type="text" class="form-control auth-input" autocomplete="username" maxlength="40" value="<%= username || '' %>" placeholder="Username" required />
+      </div>
+      <div class="mb-3">
+        <label class="visually-hidden" for="password">Password</label>
+        <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" placeholder="Password" aria-describedby="password-length-hint" data-length-hint="password-length-hint" required />
+        <div id="password-length-hint" class="form-text auth-help" aria-live="polite" hidden>Use at least 8 characters.</div>
+      </div>
+      <button type="submit" class="auth-submit-btn">Create account</button>
+    </form>
+  </div>
+</section>

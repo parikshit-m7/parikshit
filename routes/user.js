@@ -7,6 +7,8 @@ const userController = require("../controllers/users.js");
 
 router.get("/auth/google", userController.startGoogleLogin);
 router.get("/auth/google/callback", wrapAsync(userController.finishGoogleLogin));
+router.get("/complete-google-signup", userController.renderCompleteGoogleSignup);
+router.post("/complete-google-signup", wrapAsync(userController.completeGoogleSignup));
 
 router.route("/signup")
   .get(userController.renderSignupForm)

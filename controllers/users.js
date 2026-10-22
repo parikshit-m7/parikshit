@@ -102,10 +102,12 @@ module.exports.finishGoogleLogin = async (req, res) => {
         user.googleId = profile.sub;
         await user.save();
       } else if (oauth.intent === "signup") {
-        user = await User.register(
-          new User({ username: email, email, googleId: profile.sub }),
-          crypto.randomBytes(32).toString("hex")
-        );
+        req.session.pendingGoogleSignup = {
+          googleId: profile.sub,
+          email,
+          createdAt: Date.now(),
+        };
+        return res.redirect("/complete-google-signup");
       } else {
         req.flash("error", "No Wanderlust account is linked to this Google account. Create an account first.");
         return res.redirect("/login");
@@ -123,6 +125,63 @@ module.exports.finishGoogleLogin = async (req, res) => {
     console.error("Google sign-in failed:", err.message);
     req.flash("error", "We couldn't sign you in with Google. Please try again or use your email/mobile and password.");
     res.redirect("/login");
+  }
+};
+
+module.exports.renderCompleteGoogleSignup = (req, res) => {
+  const pending = req.session.pendingGoogleSignup;
+  if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+    delete req.session.pendingGoogleSignup;
+    req.flash("error", "Google signup expired. Please start again.");
+    return res.redirect("/signup");
+  }
+  res.render("users/complete-google-signup.ejs", { email: pending.email, username: "" });
+};
+
+module.exports.completeGoogleSignup = async (req, res, next) => {
+  const pending = req.session.pendingGoogleSignup;
+  if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+    delete req.session.pendingGoogleSignup;
+    req.flash("error", "Google signup expired. Please start again.");
+    return res.redirect("/signup");
+  }
+
+  const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+  if (!username || username.length > 40) {
+    req.flash("error", "Choose a username up to 40 characters long.");
+    return res.redirect("/complete-google-signup");
+  }
+  if (password.length < 8) {
+    req.flash("error", "Choose a password with at least 8 characters.");
+    return res.redirect("/complete-google-signup");
+  }
+  if (await User.findOne({ $or: [{ username }, { email: pending.email }, { googleId: pending.googleId }] })) {
+    delete req.session.pendingGoogleSignup;
+    req.flash("error", "An account with these details already exists. Please log in.");
+    return res.redirect("/login");
+  }
+
+  try {
+    const user = await User.register(new User({
+      username,
+      email: pending.email,
+      googleId: pending.googleId,
+    }), password);
+    delete req.session.pendingGoogleSignup;
+    const redirectUrl = req.session.redirectUrl || "/listings";
+    delete req.session.redirectUrl;
+    req.login(user, (err) => {
+      if (err) return next(err);
+      req.flash("success", "Your Wanderlust account is ready. Welcome!");
+      res.redirect(redirectUrl);
+    });
+  } catch (err) {
+    if (err.name === "UserExistsError") {
+      req.flash("error", "That username is already taken. Please choose another one.");
+      return res.redirect("/complete-google-signup");
+    }
+    next(err);
   }
 };
 

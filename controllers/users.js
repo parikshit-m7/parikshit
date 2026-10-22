@@ -431,128 +431,80 @@ module.exports.login = async (req, res) => {
 module.exports.renderForgotPassword = (req, res) => res.render("users/forgot-password.ejs");
 
 module.exports.requestPasswordReset = async (req, res) => {
-  const identifier = typeof req.body.identifier === "string"
-    ? req.body.identifier.trim()
-    : (typeof req.body.email === "string" ? req.body.email.trim() : "");
-  if (!identifier) {
-    flashFieldError(req, "identifier", "Enter your username or mobile number.");
+  const rawPhone = typeof req.body.phone === "string" ? req.body.phone.trim() : "";
+  const phone = normalizePhoneNumber(rawPhone);
+  if (!phone) {
+    flashFieldError(req, "phone", "Enter a valid mobile number, including the country code.", rawPhone);
     return res.redirect("/forgot-password");
   }
 
-  const matches = [{ username: identifier }];
-  if (/^\S+@\S+\.\S+$/.test(identifier)) matches.push({ email: identifier.toLowerCase() });
-  const phone = normalizePhoneNumber(identifier);
-  if (phone) matches.push({ phone });
-  const user = await User.findOne({ $or: matches }).select("+passwordResetToken +passwordResetExpires +passwordResetAttempts");
-  if (!user) {
-    req.flash("success", "If an account with those details exists, an OTP will be sent shortly.");
-    return res.redirect("/forgot-password");
-  }
-  if (!user.email) {
-    flashFieldError(req, "identifier", "This account has no recovery email. Please contact support to reset your password.", identifier);
+  if (!getTwilioVerifyConfig()) {
+    flashFieldError(req, "phone", "Phone verification is temporarily unavailable. Please try again later.", rawPhone);
     return res.redirect("/forgot-password");
   }
 
-  // Prefer an HTTPS email API because Render Free blocks outbound SMTP ports.
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const mailFrom = process.env.MAIL_FROM;
-  if (!resendApiKey || !mailFrom) {
-    console.error("Password reset email is not configured. Set RESEND_API_KEY and MAIL_FROM in Render.");
-    flashFieldError(req, "identifier", "Email verification is temporarily unavailable. Please try again later.", identifier);
-    return res.redirect("/forgot-password");
+  if (req.session.passwordResetPhone === phone
+    && req.session.passwordResetOtpSentAt
+    && Date.now() - req.session.passwordResetOtpSentAt < 30 * 1000) {
+    flashFieldError(req, "otp", "Please wait 30 seconds before requesting another code.");
+    return res.redirect("/verify-otp");
   }
-
-  const otp = String(crypto.randomInt(100000, 1000000));
-  user.passwordResetToken = crypto.createHash("sha256").update(otp).digest("hex");
-  user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
-  user.passwordResetAttempts = 0;
-  await user.save();
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: mailFrom,
-        to: [user.email],
-        subject: "Your Wanderlust password reset OTP",
-        text: `Your Wanderlust password reset code is ${otp}. It expires in 10 minutes and can be used only once. If you did not request this, ignore this email.`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:28px;color:#18241f"><h2>Reset your Wanderlust password</h2><p>Your one-time code expires in 10 minutes.</p><div style="font-size:32px;letter-spacing:8px;font-weight:bold;background:#f3f6f4;padding:18px;text-align:center;border-radius:12px">${otp}</div><p>If you did not request this code, ignore this email.</p></div>`,
-      }),
-      signal: AbortSignal.timeout(15000),
-    });
-
-    if (!response.ok) {
-      const details = await response.text();
-      throw new Error(`Email API returned HTTP ${response.status}: ${details.slice(0, 500)}`);
+    const user = await User.findOne({ phone });
+    if (user) {
+      await callTwilioVerify("Verifications", { To: phone, Channel: "sms" });
+      req.session.passwordResetOtpSentAt = Date.now();
+    } else {
+      delete req.session.passwordResetOtpSentAt;
     }
-
-    req.session.passwordResetEmail = user.email;
+    req.session.passwordResetPhone = phone;
+    delete req.session.passwordResetEmail;
     delete req.session.passwordResetUserId;
+    res.redirect("/verify-otp");
   } catch (err) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    user.passwordResetAttempts = 0;
-    await user.save();
     console.error("Password reset OTP could not be sent:", err.message);
-    flashFieldError(req, "identifier", "We couldn't send an OTP to this account's recovery email. Please try again.", identifier);
+    flashFieldError(req, "phone", "We couldn't send a code. On a Twilio trial, this number must be a verified tester number.", rawPhone);
     return res.redirect("/forgot-password");
   }
-
-  req.flash("success", "An OTP has been sent to your email address.");
-  res.redirect("/verify-otp");
 };
 
 module.exports.renderVerifyOtp = (req, res) => {
-  if (!req.session.passwordResetEmail) {
-    flashFieldError(req, "identifier", "Enter your username or mobile number first to request an OTP.");
+  if (!req.session.passwordResetPhone) {
+    flashFieldError(req, "phone", "Enter your mobile number first to request an OTP.");
     return res.redirect("/forgot-password");
   }
-  res.render("users/verify-otp.ejs", { email: req.session.passwordResetEmail });
+  res.render("users/verify-otp.ejs", { phone: req.session.passwordResetPhone });
 };
 
 module.exports.verifyPasswordResetOtp = async (req, res) => {
-  const email = req.session.passwordResetEmail;
+  const phone = req.session.passwordResetPhone;
   const otp = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
-  if (!email || !/^\d{6}$/.test(otp)) {
-    flashFieldError(req, "otp", "Enter the 6-digit OTP sent to your email.");
-    return res.redirect("/verify-otp");
-  }
-  const user = await User.findOne({ email }).select("+passwordResetToken +passwordResetExpires +passwordResetAttempts");
-  if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires <= new Date()) {
-    const expiredEmail = email;
-    delete req.session.passwordResetEmail;
-    flashFieldError(req, "identifier", "Your OTP has expired. Request a new one.", expiredEmail);
+  if (!phone) {
+    flashFieldError(req, "phone", "Enter your mobile number first to request an OTP.");
     return res.redirect("/forgot-password");
   }
-  if ((user.passwordResetAttempts || 0) >= 5) {
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-    user.passwordResetAttempts = 0;
-    await user.save();
-    const expiredEmail = email;
-    delete req.session.passwordResetEmail;
-    flashFieldError(req, "identifier", "Too many incorrect attempts. Request a new OTP.", expiredEmail);
-    return res.redirect("/forgot-password");
-  }
-  const submittedHash = crypto.createHash("sha256").update(otp).digest("hex");
-  const matches = crypto.timingSafeEqual(Buffer.from(submittedHash, "hex"), Buffer.from(user.passwordResetToken, "hex"));
-  if (!matches) {
-    user.passwordResetAttempts = (user.passwordResetAttempts || 0) + 1;
-    await user.save();
-    flashFieldError(req, "otp", "That OTP is incorrect. Please try again.");
+  if (!/^\d{6}$/.test(otp)) {
+    flashFieldError(req, "otp", "Enter the 6-digit OTP sent to your number.");
     return res.redirect("/verify-otp");
   }
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  user.passwordResetAttempts = 0;
-  await user.save();
-  req.session.passwordResetUserId = String(user._id);
-  delete req.session.passwordResetEmail;
-  res.render("users/reset-password.ejs", { otpVerified: true });
+
+  try {
+    const verification = await callTwilioVerify("VerificationChecks", { To: phone, Code: otp });
+    const user = verification.status === "approved" ? await User.findOne({ phone }) : null;
+    if (!user) {
+      flashFieldError(req, "otp", "That code is incorrect or expired. Request a new code.");
+      return res.redirect("/verify-otp");
+    }
+    req.session.passwordResetUserId = String(user._id);
+    delete req.session.passwordResetPhone;
+    delete req.session.passwordResetOtpSentAt;
+    res.render("users/reset-password.ejs", { otpVerified: true });
+  } catch (err) {
+    console.error("Password reset OTP verification failed:", err.message);
+    flashFieldError(req, "otp", "That code is incorrect or expired. Request a new code.");
+    return res.redirect("/verify-otp");
+  }
 };
 
 module.exports.renderResetPassword = async (req, res) => {
@@ -609,6 +561,8 @@ module.exports.resetPassword = async (req, res) => {
   await user.save();
   delete req.session.passwordResetUserId;
   delete req.session.passwordResetEmail;
+  delete req.session.passwordResetPhone;
+  delete req.session.passwordResetOtpSentAt;
   req.flash("success", "Your password has been updated. Please log in.");
   res.redirect("/login");
 };

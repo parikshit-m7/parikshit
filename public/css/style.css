@@ -226,4 +226,7 @@ a { color: inherit; }
 .auth-legal { margin:22px 0 0; text-align:center; color:var(--muted); font-size:.76rem; line-height:1.6; }
 .auth-optional { color:var(--muted); font-size:.78rem; font-weight:400; }
 .auth-help { color:var(--muted); }
+.auth-resend-form { margin-top:12px; text-align:center; }
+.auth-resend-btn { padding:7px 12px; border:0; background:transparent; color:var(--green); font:inherit; font-size:.9rem; font-weight:700; cursor:pointer; }
+.auth-resend-btn:hover { color:#17382d; text-decoration:underline; }
 @media (max-width: 520px) { .auth-shell { padding:28px 14px 48px; } .auth-card { padding:30px 22px 24px; border-radius:22px; } }

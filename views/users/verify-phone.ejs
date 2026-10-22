@@ -10,7 +10,7 @@
       <div class="mb-3">
         <label for="otp" class="visually-hidden">6-digit code</label>
         <input name="otp" id="otp" type="text" class="form-control auth-input text-center" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="6-digit code" aria-describedby="otp-length-hint" data-length-hint="otp-length-hint" required autofocus />
-        <div id="otp-length-hint" class="form-text auth-help" aria-live="polite" hidden>Enter the full 6-digit code.</div>
+        <div id="otp-length-hint" class="form-text auth-field-error" role="alert" aria-live="polite" hidden>Enter the full 6-digit code.</div>
         <%- include("../includes/field-error.ejs", { field: "otp" }) %>
       </div>
       <button type="submit" class="auth-submit-btn">Verify number</button>

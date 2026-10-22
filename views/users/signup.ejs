@@ -17,7 +17,6 @@
         <label for="phone" class="visually-hidden">Mobile number</label>
         <input name="phone" id="phone" type="tel" class="form-control auth-input" autocomplete="tel" inputmode="tel" value="<%= fieldValues?.phone || '' %>" placeholder="Mobile number" required />
         <%- include("../includes/field-error.ejs", { field: "phone" }) %>
-        <p class="form-text auth-help mt-2 mb-0">Having trouble getting a code? Phone signup is limited to verified test numbers right now. <a href="#google-signup">Sign up with Google</a> instead.</p>
       </div>
 
       <button type="submit" class="auth-submit-btn">Send verification code</button>

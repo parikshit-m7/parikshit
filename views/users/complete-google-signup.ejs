@@ -14,7 +14,7 @@
       <div class="mb-3">
         <label class="visually-hidden" for="password">Password</label>
         <input name="password" id="password" type="password" class="form-control auth-input" autocomplete="new-password" minlength="8" placeholder="Password" aria-describedby="password-length-hint" data-length-hint="password-length-hint" required />
-        <div id="password-length-hint" class="form-text auth-help" aria-live="polite" hidden>Use at least 8 characters.</div>
+        <div id="password-length-hint" class="form-text auth-field-error" role="alert" aria-live="polite" hidden>Use at least 8 characters.</div>
         <%- include("../includes/field-error.ejs", { field: "password" }) %>
       </div>
       <button type="submit" class="auth-submit-btn">Create account</button>

@@ -14,6 +14,9 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav me-lg-2">
         <a class="nav-link" href="/listings">Discover stays</a>
+        <button class="nav-link saved-stays-toggle" type="button" data-favorites-filter aria-pressed="false" aria-label="Show saved stays">
+          <i class="fa-regular fa-heart me-1" aria-hidden="true"></i> Saved <span class="saved-count" data-favorites-count>0</span>
+        </button>
       </div>
 
       <form class="search-form mx-lg-auto" role="search" action="/listings" method="GET">
@@ -26,6 +29,9 @@
 
       <div class="navbar-nav ms-lg-auto mt-2 mt-lg-0">
         <a class="nav-link" href="/listings/new"><i class="fa-regular fa-compass me-1"></i> Become a host</a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode" title="Switch to dark mode">
+          <i class="fa-solid fa-moon" aria-hidden="true"></i><span class="theme-toggle-label">Dark</span>
+        </button>
         <% if (!currUser) { %>
           <a class="nav-link nav-cta" href="/signup">Create account</a>
         <% } else { %>

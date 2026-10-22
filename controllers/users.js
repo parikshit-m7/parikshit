@@ -431,9 +431,25 @@ module.exports.login = async (req, res) => {
 module.exports.renderForgotPassword = (req, res) => res.render("users/forgot-password.ejs");
 
 module.exports.requestPasswordReset = async (req, res) => {
-  const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-    flashFieldError(req, "email", "Enter a valid email address.", email);
+  const identifier = typeof req.body.identifier === "string"
+    ? req.body.identifier.trim()
+    : (typeof req.body.email === "string" ? req.body.email.trim() : "");
+  if (!identifier) {
+    flashFieldError(req, "identifier", "Enter your username or mobile number.");
+    return res.redirect("/forgot-password");
+  }
+
+  const matches = [{ username: identifier }];
+  if (/^\S+@\S+\.\S+$/.test(identifier)) matches.push({ email: identifier.toLowerCase() });
+  const phone = normalizePhoneNumber(identifier);
+  if (phone) matches.push({ phone });
+  const user = await User.findOne({ $or: matches }).select("+passwordResetToken +passwordResetExpires +passwordResetAttempts");
+  if (!user) {
+    req.flash("success", "If an account with those details exists, an OTP will be sent shortly.");
+    return res.redirect("/forgot-password");
+  }
+  if (!user.email) {
+    flashFieldError(req, "identifier", "This account has no recovery email. Please contact support to reset your password.", identifier);
     return res.redirect("/forgot-password");
   }
 
@@ -442,13 +458,7 @@ module.exports.requestPasswordReset = async (req, res) => {
   const mailFrom = process.env.MAIL_FROM;
   if (!resendApiKey || !mailFrom) {
     console.error("Password reset email is not configured. Set RESEND_API_KEY and MAIL_FROM in Render.");
-    flashFieldError(req, "email", "Email verification is temporarily unavailable. Please try again later.", email);
-    return res.redirect("/forgot-password");
-  }
-
-  const user = email ? await User.findOne({ email }).select("+passwordResetToken +passwordResetExpires +passwordResetAttempts") : null;
-  if (!user) {
-    req.flash("success", "If an account with that email exists, an OTP will be sent shortly.");
+    flashFieldError(req, "identifier", "Email verification is temporarily unavailable. Please try again later.", identifier);
     return res.redirect("/forgot-password");
   }
 
@@ -488,7 +498,7 @@ module.exports.requestPasswordReset = async (req, res) => {
     user.passwordResetAttempts = 0;
     await user.save();
     console.error("Password reset OTP could not be sent:", err.message);
-    flashFieldError(req, "email", "We couldn't send an OTP to this email. Check the address and try again.", email);
+    flashFieldError(req, "identifier", "We couldn't send an OTP to this account's recovery email. Please try again.", identifier);
     return res.redirect("/forgot-password");
   }
 
@@ -498,7 +508,7 @@ module.exports.requestPasswordReset = async (req, res) => {
 
 module.exports.renderVerifyOtp = (req, res) => {
   if (!req.session.passwordResetEmail) {
-    flashFieldError(req, "email", "Enter your account email first to request an OTP.");
+    flashFieldError(req, "identifier", "Enter your username or mobile number first to request an OTP.");
     return res.redirect("/forgot-password");
   }
   res.render("users/verify-otp.ejs", { email: req.session.passwordResetEmail });
@@ -515,7 +525,7 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
   if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires <= new Date()) {
     const expiredEmail = email;
     delete req.session.passwordResetEmail;
-    flashFieldError(req, "email", "Your OTP has expired. Request a new one.", expiredEmail);
+    flashFieldError(req, "identifier", "Your OTP has expired. Request a new one.", expiredEmail);
     return res.redirect("/forgot-password");
   }
   if ((user.passwordResetAttempts || 0) >= 5) {
@@ -525,7 +535,7 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
     await user.save();
     const expiredEmail = email;
     delete req.session.passwordResetEmail;
-    flashFieldError(req, "email", "Too many incorrect attempts. Request a new OTP.", expiredEmail);
+    flashFieldError(req, "identifier", "Too many incorrect attempts. Request a new OTP.", expiredEmail);
     return res.redirect("/forgot-password");
   }
   const submittedHash = crypto.createHash("sha256").update(otp).digest("hex");
@@ -549,7 +559,7 @@ module.exports.renderResetPassword = async (req, res) => {
   const tokenHash = crypto.createHash("sha256").update(req.params.token).digest("hex");
   const user = await User.findOne({ passwordResetToken: tokenHash, passwordResetExpires: { $gt: new Date() } }).select("+passwordResetToken +passwordResetExpires");
   if (!user) {
-    flashFieldError(req, "email", "That reset link is invalid or expired. Enter your email to request a new code.");
+    flashFieldError(req, "identifier", "That reset link is invalid or expired. Enter your username or mobile number to request a new code.");
     return res.redirect("/forgot-password");
   }
   res.render("users/reset-password.ejs", { token: req.params.token });
@@ -561,7 +571,7 @@ module.exports.renderResetPasswordFromOtp = async (req, res) => {
     : null;
   if (!user) {
     delete req.session.passwordResetUserId;
-    flashFieldError(req, "email", "Verify a new OTP before choosing a password.");
+    flashFieldError(req, "identifier", "Verify a new OTP before choosing a password.");
     return res.redirect("/forgot-password");
   }
   res.render("users/reset-password.ejs", { otpVerified: true });
@@ -589,7 +599,7 @@ module.exports.resetPassword = async (req, res) => {
   }
   if (!user) {
     delete req.session.passwordResetUserId;
-    flashFieldError(req, "email", "Please verify a valid OTP before choosing a new password.");
+    flashFieldError(req, "identifier", "Please verify a valid OTP before choosing a new password.");
     return res.redirect("/forgot-password");
   }
   await user.setPassword(password);

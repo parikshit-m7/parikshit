@@ -452,12 +452,13 @@ module.exports.requestPasswordReset = async (req, res) => {
 
   try {
     const user = await User.findOne({ phone });
-    if (user) {
-      await callTwilioVerify("Verifications", { To: phone, Channel: "sms" });
-      req.session.passwordResetOtpSentAt = Date.now();
-    } else {
-      delete req.session.passwordResetOtpSentAt;
+    if (!user) {
+      flashFieldError(req, "phone", "This number isn't registered. Please sign up or enter a registered number.", rawPhone);
+      return res.redirect("/forgot-password");
     }
+
+    await callTwilioVerify("Verifications", { To: phone, Channel: "sms" });
+    req.session.passwordResetOtpSentAt = Date.now();
     req.session.passwordResetPhone = phone;
     delete req.session.passwordResetEmail;
     delete req.session.passwordResetUserId;

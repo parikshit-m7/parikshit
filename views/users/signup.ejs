@@ -5,7 +5,7 @@
     <div class="brand-mark auth-brand-mark">✦</div>
     <p class="auth-eyebrow">START YOUR JOURNEY</p>
     <h1 class="auth-title">Create your Wanderlust account</h1>
-    <a href="/auth/google?intent=signup" class="google-signin-btn">
+    <a id="google-signup" href="/auth/google?intent=signup" class="google-signin-btn">
       <span class="google-mark" aria-hidden="true">G</span>
       <span>Continue with Google</span>
     </a>
@@ -16,6 +16,7 @@
       <div class="mb-3">
         <label for="phone" class="visually-hidden">Mobile number</label>
         <input name="phone" id="phone" type="tel" class="form-control auth-input" autocomplete="tel" inputmode="tel" placeholder="Mobile number" required />
+        <p class="form-text auth-help mt-2 mb-0">During our SMS trial, OTP works only for verified test numbers. <a href="#google-signup">Sign up with Google</a> instead.</p>
       </div>
 
       <button type="submit" class="auth-submit-btn">Send verification code</button>

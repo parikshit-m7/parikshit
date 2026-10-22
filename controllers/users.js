@@ -490,7 +490,7 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
   }
 
   try {
-    const verification = await callTwilioVerify("VerificationChecks", { To: phone, Code: otp });
+    const verification = await callTwilioVerify("VerificationCheck", { To: phone, Code: otp });
     const user = verification.status === "approved" ? await User.findOne({ phone }) : null;
     if (!user) {
       flashFieldError(req, "otp", "That code is incorrect or expired. Request a new code.");

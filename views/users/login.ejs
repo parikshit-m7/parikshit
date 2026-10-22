@@ -31,13 +31,14 @@
       </div>
 
       <div class="mb-2">
-        <label for="password" class="form-label">Password</label>
+        <label for="password" class="visually-hidden">Password</label>
         <input
           name="password"
           id="password"
           type="password"
           class="form-control auth-input"
           autocomplete="current-password"
+          placeholder="Password"
           required
         />
         <%- include("../includes/field-error.ejs", { field: "password" }) %>

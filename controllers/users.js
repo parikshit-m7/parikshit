@@ -163,7 +163,7 @@ module.exports.completeGoogleSignup = async (req, res, next) => {
     return res.redirect("/complete-google-signup");
   }
   if (await User.findOne({ username })) {
-    flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+    flashFieldError(req, "username", "That username is already taken.", username);
     return res.redirect("/complete-google-signup");
   }
   if (await User.findOne({ $or: [{ email: pending.email }, { googleId: pending.googleId }] })) {
@@ -188,7 +188,7 @@ module.exports.completeGoogleSignup = async (req, res, next) => {
     });
   } catch (err) {
     if (err.name === "UserExistsError") {
-      flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+      flashFieldError(req, "username", "That username is already taken.", username);
       return res.redirect("/complete-google-signup");
     }
     next(err);
@@ -371,7 +371,7 @@ module.exports.completePhoneSignup = async (req, res, next) => {
   }
   if (await User.findOne({ username })) {
     pending.username = username;
-    flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+    flashFieldError(req, "username", "That username is already taken.", username);
     return res.redirect("/complete-phone-signup");
   }
   if (await User.findOne({ phone: pending.phone })) {
@@ -393,7 +393,7 @@ module.exports.completePhoneSignup = async (req, res, next) => {
     });
   } catch (e) {
     if (e.name === "UserExistsError") {
-      flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+      flashFieldError(req, "username", "That username is already taken.", username);
     } else {
       req.flash("error", e.message);
     }

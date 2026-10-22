@@ -9,7 +9,7 @@
   --green: #244b3e;
   --lime: #d8f078;
   --coral: #e8785d;
-  --auth-error-color: #b42318;
+  --auth-error-color: #d92d20;
   --shadow: 0 18px 50px rgba(26, 45, 35, .08);
 }
 @media (prefers-color-scheme: dark) {

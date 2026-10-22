@@ -407,11 +407,11 @@ module.exports.prepareLogin = async (req, res, next) => {
     ? req.body.identifier.trim()
     : (typeof req.body.username === "string" ? req.body.username.trim() : "");
   if (!identifier) {
-    flashFieldError(req, "identifier", "Enter your email, username, or mobile number.");
+    flashFieldError(req, "identifier", "Enter your username or mobile number.");
     return res.redirect("/login");
   }
 
-  const matches = [{ username: identifier }, { email: identifier.toLowerCase() }];
+  const matches = [{ username: identifier }];
   const phone = normalizePhoneNumber(identifier);
   if (phone) matches.push({ phone });
 

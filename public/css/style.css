@@ -226,7 +226,7 @@ a { color: inherit; }
 .auth-legal { margin:22px 0 0; text-align:center; color:var(--muted); font-size:.76rem; line-height:1.6; }
 .auth-optional { color:var(--muted); font-size:.78rem; font-weight:400; }
 .auth-help { color:var(--muted); }
-.auth-field-error { margin-top:8px; padding:8px 11px; border:1px solid #efb1b1; border-radius:9px; background:#fff1f1; color:#a31313; font-size:.875rem; font-weight:700; line-height:1.45; }
+.auth-field-error { margin-top:8px; padding:0; border:0; background:transparent; color:#c62828; font-size:1rem; font-weight:700; line-height:1.45; }
 .auth-field-error[hidden] { display:none; }
 .auth-resend-form { margin-top:12px; text-align:center; }
 .auth-resend-btn { padding:7px 12px; border:0; background:transparent; color:var(--green); font:inherit; font-size:.9rem; font-weight:700; cursor:pointer; }

@@ -10,6 +10,7 @@
         <div class="mb-4">
           <label for="otp" class="form-label fw-semibold">6-digit OTP</label>
           <input id="otp" name="otp" type="text" class="form-control text-center" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="123456" required>
+          <%- include("../includes/field-error.ejs", { field: "otp" }) %>
         </div>
         <button class="hero-btn hero-btn-primary w-100 border-0" type="submit">Verify OTP</button>
       </form>

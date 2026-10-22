@@ -23,9 +23,11 @@
           type="text"
           class="form-control auth-input"
           autocomplete="username"
+          value="<%= fieldValues?.identifier || '' %>"
           placeholder="you@example.com, username, or +91 9876543210"
           required
         />
+        <%- include("../includes/field-error.ejs", { field: "identifier" }) %>
       </div>
 
       <div class="mb-2">
@@ -38,6 +40,7 @@
           autocomplete="current-password"
           required
         />
+        <%- include("../includes/field-error.ejs", { field: "password" }) %>
       </div>
 
       <p class="text-end mb-4">

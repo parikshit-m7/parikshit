@@ -2,6 +2,12 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const User = require("../models/user");
 
+function flashFieldError(req, field, message, value) {
+  const error = { field, message };
+  if (typeof value === "string" && !["password", "confirmPassword", "otp"].includes(field)) error.value = value;
+  req.flash("fieldError", JSON.stringify(error));
+}
+
 async function postForm(url, values) {
   const response = await fetch(url, {
     method: "POST",
@@ -149,14 +155,18 @@ module.exports.completeGoogleSignup = async (req, res, next) => {
   const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
   const password = typeof req.body.password === "string" ? req.body.password : "";
   if (!username || username.length > 40) {
-    req.flash("error", "Choose a username up to 40 characters long.");
+    flashFieldError(req, "username", "Choose a username up to 40 characters long.", username);
     return res.redirect("/complete-google-signup");
   }
   if (password.length < 8) {
-    req.flash("error", "Choose a password with at least 8 characters.");
+    flashFieldError(req, "password", "Use at least 8 characters for your password.");
     return res.redirect("/complete-google-signup");
   }
-  if (await User.findOne({ $or: [{ username }, { email: pending.email }, { googleId: pending.googleId }] })) {
+  if (await User.findOne({ username })) {
+    flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+    return res.redirect("/complete-google-signup");
+  }
+  if (await User.findOne({ $or: [{ email: pending.email }, { googleId: pending.googleId }] })) {
     delete req.session.pendingGoogleSignup;
     req.flash("error", "An account with these details already exists. Please log in.");
     return res.redirect("/login");
@@ -178,7 +188,7 @@ module.exports.completeGoogleSignup = async (req, res, next) => {
     });
   } catch (err) {
     if (err.name === "UserExistsError") {
-      req.flash("error", "That username is already taken. Please choose another one.");
+      flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
       return res.redirect("/complete-google-signup");
     }
     next(err);
@@ -237,16 +247,16 @@ module.exports.sendPhoneSignupOtp = async (req, res) => {
     const phone = rawPhone ? normalizePhoneNumber(rawPhone) : "";
 
     if (!phone) {
-      req.flash("error", "Enter a valid mobile number to verify your account.");
+      flashFieldError(req, "phone", "Enter a valid mobile number, including the country code.", rawPhone);
       return res.redirect("/signup");
     }
     if (phone && await User.findOne({ phone })) {
-      req.flash("error", "An account already uses that mobile number. Please log in.");
+      flashFieldError(req, "phone", "An account already uses this number. Please log in.", rawPhone);
       return res.redirect("/signup");
     }
 
     if (!getTwilioVerifyConfig()) {
-      req.flash("error", "Phone OTP is not configured yet. Please try again later.");
+      flashFieldError(req, "phone", "Phone verification is temporarily unavailable. Please try Google signup.", rawPhone);
       return res.redirect("/signup");
     }
 
@@ -259,7 +269,7 @@ module.exports.sendPhoneSignupOtp = async (req, res) => {
     res.redirect("/verify-phone");
   } catch (e) {
     console.error("Phone signup OTP could not be sent:", e.message);
-    req.flash("error", "We couldn't send a verification code. Check the number and try again.");
+    flashFieldError(req, "phone", "We couldn't send a code to this number. Try Google signup instead.", req.body.phone || "");
     res.redirect("/signup");
   }
 };
@@ -268,11 +278,11 @@ module.exports.resendPhoneSignupOtp = async (req, res) => {
   const pending = req.session.pendingPhoneSignup;
   if (!pending || pending.verified || Date.now() - pending.createdAt > 10 * 60 * 1000) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "Start signup again to request a fresh phone verification code.");
+    flashFieldError(req, "phone", "Start signup again to request a fresh phone verification code.");
     return res.redirect("/signup");
   }
   if (Date.now() - pending.otpSentAt < 30 * 1000) {
-    req.flash("error", "Please wait 30 seconds before requesting another code.");
+    flashFieldError(req, "otp", "Please wait 30 seconds before requesting another code.");
     return res.redirect("/verify-phone");
   }
   try {
@@ -282,7 +292,7 @@ module.exports.resendPhoneSignupOtp = async (req, res) => {
     res.redirect("/verify-phone");
   } catch (e) {
     console.error("Phone signup OTP resend failed:", e.message);
-    req.flash("error", "We couldn't send another code. Please try again shortly.");
+    flashFieldError(req, "otp", "We couldn't send another code. Please try again shortly.");
     res.redirect("/verify-phone");
   }
 };
@@ -291,7 +301,7 @@ module.exports.renderPhoneSignupOtp = (req, res) => {
   const pending = req.session.pendingPhoneSignup;
   if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "Start signup again to request a fresh phone verification code.");
+    flashFieldError(req, "phone", "Start signup again to request a fresh phone verification code.");
     return res.redirect("/signup");
   }
   res.render("users/verify-phone.ejs", { phone: pending.phone });
@@ -302,18 +312,18 @@ module.exports.verifyPhoneSignupOtp = async (req, res) => {
   const code = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
   if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "That verification code expired. Start signup again.");
+    flashFieldError(req, "phone", "That verification code expired. Start signup again.");
     return res.redirect("/signup");
   }
   if (!/^\d{6}$/.test(code)) {
-    req.flash("error", "Enter the 6-digit code sent to your mobile number.");
+    flashFieldError(req, "otp", "Enter the 6-digit code sent to your mobile number.");
     return res.redirect("/verify-phone");
   }
 
   try {
     const result = await callTwilioVerify("VerificationCheck", { To: pending.phone, Code: code });
     if (result.status !== "approved") {
-      req.flash("error", "That code is incorrect or expired. Please try again.");
+      flashFieldError(req, "otp", "That code is incorrect or expired. Please try again.");
       return res.redirect("/verify-phone");
     }
     pending.verified = true;
@@ -321,7 +331,7 @@ module.exports.verifyPhoneSignupOtp = async (req, res) => {
     res.redirect("/complete-phone-signup");
   } catch (e) {
     console.error("Phone signup OTP verification failed:", e.message);
-    req.flash("error", "We couldn't verify that code. Please try again.");
+    flashFieldError(req, "otp", "We couldn't verify that code. Please try again.");
     res.redirect("/verify-phone");
   }
 };
@@ -330,7 +340,7 @@ module.exports.renderCompletePhoneSignup = (req, res) => {
   const pending = req.session.pendingPhoneSignup;
   if (!pending?.verified || Date.now() - pending.verifiedAt > 10 * 60 * 1000) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "Verify your mobile number before finishing signup.");
+    flashFieldError(req, "phone", "Verify your mobile number before finishing signup.");
     return res.redirect("/signup");
   }
   res.render("users/complete-phone-signup.ejs", { username: pending.username || "", phone: pending.phone });
@@ -340,33 +350,33 @@ module.exports.completePhoneSignup = async (req, res, next) => {
   const pending = req.session.pendingPhoneSignup;
   if (!pending?.verified || Date.now() - pending.verifiedAt > 10 * 60 * 1000) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "Your verification expired. Please start signup again.");
+    flashFieldError(req, "phone", "Your verification expired. Please start signup again.");
     return res.redirect("/signup");
   }
   const username = typeof req.body.username === "string" ? req.body.username.trim() : "";
   const password = typeof req.body.password === "string" ? req.body.password : "";
   if (!username) {
-    req.flash("error", "Choose a username to finish creating your account.");
+    flashFieldError(req, "username", "Choose a username to finish creating your account.");
     return res.redirect("/complete-phone-signup");
   }
   if (username.length > 40) {
     pending.username = username.slice(0, 40);
-    req.flash("error", "Your username must be 40 characters or fewer.");
+    flashFieldError(req, "username", "Your username must be 40 characters or fewer.", username);
     return res.redirect("/complete-phone-signup");
   }
   if (password.length < 8) {
     pending.username = username;
-    req.flash("error", "Choose a password with at least 8 characters.");
+    flashFieldError(req, "password", "Use at least 8 characters for your password.");
     return res.redirect("/complete-phone-signup");
   }
   if (await User.findOne({ username })) {
     pending.username = username;
-    req.flash("error", "That username is already taken. Please choose another one.");
+    flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
     return res.redirect("/complete-phone-signup");
   }
   if (await User.findOne({ phone: pending.phone })) {
     delete req.session.pendingPhoneSignup;
-    req.flash("error", "An account already uses that mobile number. Please log in.");
+    flashFieldError(req, "identifier", "An account already uses this number. Please log in.", pending.phone);
     return res.redirect("/login");
   }
 
@@ -382,7 +392,11 @@ module.exports.completePhoneSignup = async (req, res, next) => {
       res.redirect("/listings");
     });
   } catch (e) {
-    req.flash("error", e.message);
+    if (e.name === "UserExistsError") {
+      flashFieldError(req, "username", "That username is already taken. Choose another one.", username);
+    } else {
+      req.flash("error", e.message);
+    }
     res.redirect("/complete-phone-signup");
   }
 };
@@ -393,7 +407,7 @@ module.exports.prepareLogin = async (req, res, next) => {
     ? req.body.identifier.trim()
     : (typeof req.body.username === "string" ? req.body.username.trim() : "");
   if (!identifier) {
-    req.flash("error", "Enter your email, username, or mobile number.");
+    flashFieldError(req, "identifier", "Enter your email, username, or mobile number.");
     return res.redirect("/login");
   }
 
@@ -403,7 +417,7 @@ module.exports.prepareLogin = async (req, res, next) => {
 
   const user = await User.findOne({ $or: matches });
   if (!user) {
-    req.flash("error", "We couldn't find an account with those details.");
+    flashFieldError(req, "identifier", "We couldn't find an account with those details.", identifier);
     return res.redirect("/login");
   }
   req.body.username = user.username;
@@ -418,13 +432,17 @@ module.exports.renderForgotPassword = (req, res) => res.render("users/forgot-pas
 
 module.exports.requestPasswordReset = async (req, res) => {
   const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    flashFieldError(req, "email", "Enter a valid email address.", email);
+    return res.redirect("/forgot-password");
+  }
 
   // Prefer an HTTPS email API because Render Free blocks outbound SMTP ports.
   const resendApiKey = process.env.RESEND_API_KEY;
   const mailFrom = process.env.MAIL_FROM;
   if (!resendApiKey || !mailFrom) {
     console.error("Password reset email is not configured. Set RESEND_API_KEY and MAIL_FROM in Render.");
-    req.flash("error", "Email OTP is not configured yet. The site administrator must configure the email API.");
+    flashFieldError(req, "email", "Email verification is temporarily unavailable. Please try again later.", email);
     return res.redirect("/forgot-password");
   }
 
@@ -470,7 +488,7 @@ module.exports.requestPasswordReset = async (req, res) => {
     user.passwordResetAttempts = 0;
     await user.save();
     console.error("Password reset OTP could not be sent:", err.message);
-    req.flash("error", "We couldn't send the OTP. Please check the email API settings and sender verification.");
+    flashFieldError(req, "email", "We couldn't send an OTP to this email. Check the address and try again.", email);
     return res.redirect("/forgot-password");
   }
 
@@ -480,7 +498,7 @@ module.exports.requestPasswordReset = async (req, res) => {
 
 module.exports.renderVerifyOtp = (req, res) => {
   if (!req.session.passwordResetEmail) {
-    req.flash("error", "Enter your account email first to request an OTP.");
+    flashFieldError(req, "email", "Enter your account email first to request an OTP.");
     return res.redirect("/forgot-password");
   }
   res.render("users/verify-otp.ejs", { email: req.session.passwordResetEmail });
@@ -490,13 +508,14 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
   const email = req.session.passwordResetEmail;
   const otp = typeof req.body.otp === "string" ? req.body.otp.trim() : "";
   if (!email || !/^\d{6}$/.test(otp)) {
-    req.flash("error", "Enter the 6-digit OTP sent to your email.");
+    flashFieldError(req, "otp", "Enter the 6-digit OTP sent to your email.");
     return res.redirect("/verify-otp");
   }
   const user = await User.findOne({ email }).select("+passwordResetToken +passwordResetExpires +passwordResetAttempts");
   if (!user || !user.passwordResetToken || !user.passwordResetExpires || user.passwordResetExpires <= new Date()) {
+    const expiredEmail = email;
     delete req.session.passwordResetEmail;
-    req.flash("error", "Your OTP has expired. Please request a new one.");
+    flashFieldError(req, "email", "Your OTP has expired. Request a new one.", expiredEmail);
     return res.redirect("/forgot-password");
   }
   if ((user.passwordResetAttempts || 0) >= 5) {
@@ -504,8 +523,9 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
     user.passwordResetExpires = undefined;
     user.passwordResetAttempts = 0;
     await user.save();
+    const expiredEmail = email;
     delete req.session.passwordResetEmail;
-    req.flash("error", "Too many incorrect attempts. Please request a new OTP.");
+    flashFieldError(req, "email", "Too many incorrect attempts. Request a new OTP.", expiredEmail);
     return res.redirect("/forgot-password");
   }
   const submittedHash = crypto.createHash("sha256").update(otp).digest("hex");
@@ -513,7 +533,7 @@ module.exports.verifyPasswordResetOtp = async (req, res) => {
   if (!matches) {
     user.passwordResetAttempts = (user.passwordResetAttempts || 0) + 1;
     await user.save();
-    req.flash("error", "That OTP is incorrect. Please try again.");
+    flashFieldError(req, "otp", "That OTP is incorrect. Please try again.");
     return res.redirect("/verify-otp");
   }
   user.passwordResetToken = undefined;
@@ -529,22 +549,34 @@ module.exports.renderResetPassword = async (req, res) => {
   const tokenHash = crypto.createHash("sha256").update(req.params.token).digest("hex");
   const user = await User.findOne({ passwordResetToken: tokenHash, passwordResetExpires: { $gt: new Date() } }).select("+passwordResetToken +passwordResetExpires");
   if (!user) {
-    req.flash("error", "That password reset link is invalid or expired. Please request a new OTP.");
+    flashFieldError(req, "email", "That reset link is invalid or expired. Enter your email to request a new code.");
     return res.redirect("/forgot-password");
   }
   res.render("users/reset-password.ejs", { token: req.params.token });
 };
 
+module.exports.renderResetPasswordFromOtp = async (req, res) => {
+  const user = req.session.passwordResetUserId
+    ? await User.findById(req.session.passwordResetUserId)
+    : null;
+  if (!user) {
+    delete req.session.passwordResetUserId;
+    flashFieldError(req, "email", "Verify a new OTP before choosing a password.");
+    return res.redirect("/forgot-password");
+  }
+  res.render("users/reset-password.ejs", { otpVerified: true });
+};
+
 module.exports.resetPassword = async (req, res) => {
   const password = typeof req.body.password === "string" ? req.body.password : "";
   const confirmPassword = typeof req.body.confirmPassword === "string" ? req.body.confirmPassword : "";
-  const backUrl = req.params.token ? `/reset-password/${encodeURIComponent(req.params.token)}` : "/forgot-password";
+  const backUrl = req.params.token ? `/reset-password/${encodeURIComponent(req.params.token)}` : "/reset-password";
   if (password.length < 8) {
-    req.flash("error", "Choose a password with at least 8 characters.");
+    flashFieldError(req, "password", "Use at least 8 characters for your password.");
     return res.redirect(backUrl);
   }
   if (password !== confirmPassword) {
-    req.flash("error", "The passwords do not match.");
+    flashFieldError(req, "confirmPassword", "The passwords do not match.");
     return res.redirect(backUrl);
   }
 
@@ -557,7 +589,7 @@ module.exports.resetPassword = async (req, res) => {
   }
   if (!user) {
     delete req.session.passwordResetUserId;
-    req.flash("error", "Please verify a valid OTP before choosing a new password.");
+    flashFieldError(req, "email", "Please verify a valid OTP before choosing a new password.");
     return res.redirect("/forgot-password");
   }
   await user.setPassword(password);

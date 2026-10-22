@@ -27,7 +27,10 @@ router.route("/login")
     userController.prepareLogin,
     passport.authenticate("local", {
       failureRedirect: "/login",
-      failureFlash: "Incorrect email, username, mobile number, or password.",
+      failureFlash: {
+        type: "fieldError",
+        message: JSON.stringify({ field: "password", message: "Incorrect password. Please try again." }),
+      },
     }),
     userController.login
   );
@@ -36,6 +39,7 @@ router.get("/forgot-password", userController.renderForgotPassword);
 router.post("/forgot-password", wrapAsync(userController.requestPasswordReset));
 router.get("/verify-otp", userController.renderVerifyOtp);
 router.post("/verify-otp", wrapAsync(userController.verifyPasswordResetOtp));
+router.get("/reset-password", wrapAsync(userController.renderResetPasswordFromOtp));
 router.get("/reset-password/:token", wrapAsync(userController.renderResetPassword));
 router.post("/reset-password/:token", wrapAsync(userController.resetPassword));
 router.post("/reset-password", wrapAsync(userController.resetPassword));

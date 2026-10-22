@@ -94,6 +94,19 @@ passport.deserializeUser(User.deserializeUser());
 app.use((req, res, next) =>{
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error"); 
+    res.locals.fieldErrors = {};
+    res.locals.fieldValues = {};
+    for (const item of req.flash("fieldError")) {
+        try {
+            const fieldError = JSON.parse(item);
+            if (fieldError.field && fieldError.message) {
+                res.locals.fieldErrors[fieldError.field] = fieldError.message;
+                if (typeof fieldError.value === "string") res.locals.fieldValues[fieldError.field] = fieldError.value;
+            }
+        } catch (error) {
+            console.error("Could not read a form field error.", error.message);
+        }
+    }
     res.locals.currUser = req.user;
     next();
 });

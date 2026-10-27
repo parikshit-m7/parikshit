@@ -245,3 +245,45 @@ html[data-theme="dark"] .listing-heart {
 @media (prefers-reduced-motion: reduce) {
   html[data-theme="dark"] .listing-card { transition: none !important; }
 }
+
+
+/* Hero call-to-action contrast fix for dark mode (mobile and desktop). */
+html[data-theme="dark"] .hero-actions .hero-btn-primary {
+  background: #d4d2ff !important;
+  border: 1px solid #e3e1ff !important;
+  color: #191a2b !important;
+  font-weight: 800 !important;
+  text-shadow: none !important;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .24);
+}
+html[data-theme="dark"] .hero-actions .hero-btn-primary i {
+  color: #191a2b !important;
+}
+html[data-theme="dark"] .hero-actions .hero-btn-ghost {
+  color: #ffffff !important;
+  background: rgba(13, 16, 25, .72) !important;
+  border: 1px solid rgba(255, 255, 255, .24) !important;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 750 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+html[data-theme="dark"] .hero-actions .hero-btn-ghost i {
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .hero-note,
+html[data-theme="dark"] .hero-note strong {
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .85);
+}
+html[data-theme="dark"] .hero-note-mark {
+  color: #d4d2ff !important;
+}
+@media (max-width: 520px) {
+  html[data-theme="dark"] .hero-actions .hero-btn {
+    min-height: 42px;
+    font-size: 12px;
+  }
+}

@@ -287,3 +287,41 @@ html[data-theme="dark"] .hero-note-mark {
     font-size: 12px;
   }
 }
+
+
+/* Indian-language selector */
+.language-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 8px 0 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(120, 120, 150, .35);
+  border-radius: 999px;
+  color: var(--text-color, #29283a);
+  background: var(--surface-color, #fff);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.language-control select {
+  max-width: 145px;
+  min-width: 90px;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.language-control option { color: #20202b; background: #fff; }
+html[data-theme="dark"] .language-control {
+  color: #f3f1ff;
+  background: #1b1d29;
+  border-color: rgba(205, 201, 255, .25);
+}
+.google-translate-hidden { display: none !important; }
+.goog-te-banner-frame, .skiptranslate iframe { visibility: hidden !important; }
+body { top: 0 !important; }
+@media (max-width: 991px) {
+  .language-control { margin: 8px 0; align-self: flex-start; }
+}

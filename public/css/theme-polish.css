@@ -325,3 +325,85 @@ body { top: 0 !important; }
 @media (max-width: 991px) {
   .language-control { margin: 8px 0; align-self: flex-start; }
 }
+
+
+/* Equal-size listing cards: consistent photo ratio, card height and aligned prices. */
+.listing-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch !important;
+  gap: 22px !important;
+}
+.listing-grid > .listing-link {
+  display: flex !important;
+  min-width: 0;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.listing-grid > .listing-link > .listing-card {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  height: 100% !important;
+  min-width: 0;
+  margin: 0;
+}
+.listing-grid .listing-image-wrap {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
+  aspect-ratio: 4 / 3 !important;
+  overflow: hidden;
+}
+.listing-grid .listing-image-wrap .card-img-top {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+}
+.listing-grid .listing-card .card-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.listing-grid .listing-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+}
+.listing-grid .listing-title {
+  display: -webkit-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+.listing-grid .listing-rating { flex: 0 0 auto; white-space: nowrap; }
+.listing-grid .listing-card .card-text {
+  display: -webkit-box;
+  min-height: 40px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.listing-grid .listing-card .listing-price { margin-top: auto; padding-top: 8px; }
+
+@media (max-width: 767.98px) {
+  .listing-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 18px !important; }
+}
+@media (min-width: 420px) and (max-width: 767.98px) {
+  .listing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+}
+@media (max-width: 419.98px) {
+  .listing-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}

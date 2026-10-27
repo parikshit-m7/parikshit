@@ -141,3 +141,26 @@ html[data-theme="dark"] hr { border-color: var(--line) !important; opacity: 1; }
 html[data-theme="dark"] .form-control:focus,
 html[data-theme="dark"] .form-select:focus { border-color: #8c91df !important; box-shadow: 0 0 0 4px rgba(140,145,223,.16) !important; }
 html[data-theme="dark"] ::selection { background: #d9dcff; color: #171925; }
+
+/* Contrast fixes: listing cards intentionally remain white in dark mode.
+   Keep their text dark so titles, locations, ratings and prices stay readable. */
+html[data-theme="dark"] .listing-card .card-body { color: #20252f !important; }
+html[data-theme="dark"] .listing-card .listing-title,
+html[data-theme="dark"] .listing-card .listing-rating,
+html[data-theme="dark"] .listing-card .listing-price { color: #20252f !important; }
+html[data-theme="dark"] .listing-card .card-text,
+html[data-theme="dark"] .listing-card .listing-price span { color: #626b79 !important; }
+html[data-theme="dark"] .listing-card .listing-rating i { color: #b7791f !important; }
+html[data-theme="dark"] .listing-card .listing-image-wrap + .card-body { background: #fff !important; }
+html[data-theme="dark"] .listing-card .card-body a { color: #44477f !important; }
+html[data-theme="dark"] .listing-card .card-body hr,
+html[data-theme="dark"] .detail-main-card hr,
+html[data-theme="dark"] .section-heading + hr,
+html[data-theme="dark"] #filters { border-color: #454b5d !important; }
+html[data-theme="dark"] .price-filter { border: 1px solid #3b4255 !important; }
+html[data-theme="dark"] .price-filter input { color: #f1f3fa !important; }
+html[data-theme="dark"] .tax-toggle { border: 1px solid #3b4255 !important; }
+html[data-theme="dark"] .tax-toggle .form-check-input { border: 1px solid #77819a !important; }
+html[data-theme="dark"] .tax-toggle .form-check-input:checked { background-color: #686bb9 !important; border-color: #686bb9 !important; }
+html[data-theme="dark"] .navbar-toggler { border: 1px solid #454b5d !important; }
+html[data-theme="dark"] .listing-grid { border-color: #303646; }

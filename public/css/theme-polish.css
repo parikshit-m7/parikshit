@@ -1,0 +1,143 @@
+/* WanderLust dark-theme polish
+   * The light theme is intentionally untouched.
+   * This file only applies when the saved theme is dark.
+   */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f1f3fa;
+  --muted: #aab3c5;
+  --paper: #12141b;
+  --card: #1b1f2a;
+  --line: #303646;
+  --green: #a9b8ff;
+  --lime: #d9dcff;
+  --coral: #ffad9b;
+  --shadow: 0 18px 48px rgba(0, 0, 0, .32);
+  --auth-error-color: #ff9c9c;
+}
+html[data-theme="dark"] body { background: var(--paper); color: var(--ink); }
+html[data-theme="dark"] .navbar {
+  background: rgba(18, 20, 27, .94) !important;
+  border-bottom-color: var(--line) !important;
+}
+html[data-theme="dark"] .navbar-brand { color: #d9dcff !important; }
+html[data-theme="dark"] .brand-mark {
+  background: linear-gradient(135deg, #5556a8, #383b72);
+  color: #fff;
+}
+html[data-theme="dark"] .navbar .nav-link { color: #c4cada !important; }
+html[data-theme="dark"] .navbar .nav-link:hover {
+  color: #fff !important;
+  background: #292d3e;
+}
+html[data-theme="dark"] .navbar-toggler { border-color: var(--line) !important; }
+html[data-theme="dark"] .search-form,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .destination-tile,
+html[data-theme="dark"] .tax-toggle,
+html[data-theme="dark"] .review-card,
+html[data-theme="dark"] .review-form,
+html[data-theme="dark"] .auth-card,
+html[data-theme="dark"] .back-to-top {
+  background: var(--card) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+html[data-theme="dark"] .search-inp,
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] .price-filter input {
+  background-color: #171b25 !important;
+  border-color: #3b4255 !important;
+  color: #f1f3fa !important;
+}
+html[data-theme="dark"] .search-inp::placeholder,
+html[data-theme="dark"] .form-control::placeholder,
+html[data-theme="dark"] .price-filter input::placeholder { color: #929db2 !important; }
+html[data-theme="dark"] .form-label,
+html[data-theme="dark"] .form-check-label,
+html[data-theme="dark"] .auth-switch,
+html[data-theme="dark"] .tax-toggle .form-check-label,
+html[data-theme="dark"] .price-filter label { color: #d6daea !important; }
+html[data-theme="dark"] .section-title,
+html[data-theme="dark"] .detail-header h1,
+html[data-theme="dark"] .empty-state h3,
+html[data-theme="dark"] .listing-card .listing-title,
+html[data-theme="dark"] .listing-rating,
+html[data-theme="dark"] .listing-price,
+html[data-theme="dark"] .detail-price,
+html[data-theme="dark"] .auth-title { color: #f1f3fa !important; }
+html[data-theme="dark"] .section-subtitle,
+html[data-theme="dark"] .listing-card .card-text,
+html[data-theme="dark"] .detail-location,
+html[data-theme="dark"] .detail-price span,
+html[data-theme="dark"] .footer-copy,
+html[data-theme="dark"] .auth-subtitle,
+html[data-theme="dark"] .auth-help,
+html[data-theme="dark"] .auth-legal,
+html[data-theme="dark"] .auth-optional,
+html[data-theme="dark"] .tax-info { color: var(--muted) !important; }
+html[data-theme="dark"] .section-kicker,
+html[data-theme="dark"] .section-count { color: #c0c8dc !important; }
+html[data-theme="dark"] .filter {
+  color: #c7cde0;
+  border-color: transparent;
+}
+html[data-theme="dark"] .filter:hover,
+html[data-theme="dark"] .filter:focus-visible {
+  background: #292d3e;
+  border-color: #454b68;
+  color: #f1f3fa;
+}
+html[data-theme="dark"] .destination-tile:hover { color: #e0e3ff !important; border-color: #646ba0 !important; }
+html[data-theme="dark"] .destination-icon { background: #2b2d49; color: #d9dcff; }
+html[data-theme="dark"] .destination-arrow { color: #aab3c5; }
+html[data-theme="dark"] .listing-image-wrap,
+html[data-theme="dark"] .detail-gallery { background: #222635; }
+html[data-theme="dark"] .listing-badge { background: rgba(24, 27, 38, .94); color: #f1f3fa; }
+html[data-theme="dark"] .listing-heart { background: rgba(24, 27, 38, .94); color: #f1f3fa; }
+html[data-theme="dark"] .empty-state { background: #1b1f2a; border-color: #454b60; color: #f1f3fa; }
+html[data-theme="dark"] .btn-dark,
+html[data-theme="dark"] .btn-success,
+html[data-theme="dark"] .add-btn,
+html[data-theme="dark"] .edit-btn,
+html[data-theme="dark"] .auth-submit-btn,
+html[data-theme="dark"] .search-btn,
+html[data-theme="dark"] .price-filter button {
+  background: linear-gradient(135deg, #5a5da7, #44477f) !important;
+  border-color: #5a5da7 !important;
+  color: #fff !important;
+}
+html[data-theme="dark"] .btn-dark:hover,
+html[data-theme="dark"] .btn-success:hover,
+html[data-theme="dark"] .add-btn:hover,
+html[data-theme="dark"] .edit-btn:hover,
+html[data-theme="dark"] .auth-submit-btn:hover,
+html[data-theme="dark"] .search-btn:hover,
+html[data-theme="dark"] .price-filter button:hover { background: #686bb9 !important; border-color: #686bb9 !important; }
+html[data-theme="dark"] .btn-outline-dark { color: #e5e7f4 !important; border-color: #60677e !important; }
+html[data-theme="dark"] .btn-outline-dark:hover { background: #e0e3ff !important; color: #171925 !important; }
+html[data-theme="dark"] .site-footer { background: #171a23; border-top-color: var(--line); }
+html[data-theme="dark"] .footer-links a { color: #c5ccdd; }
+html[data-theme="dark"] .footer-links a:hover,
+html[data-theme="dark"] .forgot-password-link,
+html[data-theme="dark"] .auth-switch a,
+html[data-theme="dark"] .auth-legal a,
+html[data-theme="dark"] .auth-resend-btn,
+html[data-theme="dark"] .price-filter a { color: #c3c8ff !important; }
+html[data-theme="dark"] .footer-socials a { color: #d9dcff; border-color: #3b4255; }
+html[data-theme="dark"] .footer-socials a:hover { background: #44477f; color: #fff; }
+html[data-theme="dark"] .price-filter { background: #1b1f2a; border-color: var(--line); }
+html[data-theme="dark"] .auth-eyebrow { color: #c3c8ff; }
+html[data-theme="dark"] .google-signin-btn { background: #222635; border-color: #3b4255; color: #f1f3fa; }
+html[data-theme="dark"] .google-signin-btn:hover { background: #2b3042; border-color: #626a8c; color: #fff; }
+html[data-theme="dark"] .auth-divider { color: var(--muted); }
+html[data-theme="dark"] .auth-divider::before,
+html[data-theme="dark"] .auth-divider::after { background: var(--line); }
+html[data-theme="dark"] .alert.alert-danger { background: #382126; border-color: #693743; color: #ffb7bf; }
+html[data-theme="dark"] .alert.alert-success { background: #1d302b; border-color: #35594d; color: #bdebd8; }
+html[data-theme="dark"] .text-muted { color: var(--muted) !important; }
+html[data-theme="dark"] hr { border-color: var(--line) !important; opacity: 1; }
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus { border-color: #8c91df !important; box-shadow: 0 0 0 4px rgba(140,145,223,.16) !important; }
+html[data-theme="dark"] ::selection { background: #d9dcff; color: #171925; }

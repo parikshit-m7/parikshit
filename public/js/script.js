@@ -2,6 +2,44 @@
   'use strict'
 
   const themeToggle = document.querySelector('[data-theme-toggle]')
+  // Website language selector (22 languages listed in India's Eighth Schedule).
+  const languageSelect = document.getElementById('wanderlust-language')
+  const languageKey = 'wanderlust-language'
+  const supportedLanguageCodes = 'as,bn,doi,en,gu,hi,kn,ks,kok,mai,ml,mni,mr,ne,or,pa,sa,sat,sd,ta,te,ur'
+
+  window.googleTranslateElementInit = () => {
+    if (!window.google?.translate?.TranslateElement) return
+    new window.google.translate.TranslateElement({
+      pageLanguage: 'en',
+      includedLanguages: supportedLanguageCodes,
+      autoDisplay: false
+    }, 'google_translate_element')
+    const savedLanguage = (() => {
+      try { return localStorage.getItem(languageKey) || '' } catch (_) { return '' }
+    })()
+    if (languageSelect && savedLanguage) {
+      languageSelect.value = savedLanguage
+      applyWebsiteLanguage(savedLanguage)
+    }
+  }
+
+  function applyWebsiteLanguage(language) {
+    const combo = document.querySelector('.goog-te-combo')
+    if (!combo || !language) return
+    combo.value = language
+    combo.dispatchEvent(new Event('change', { bubbles: true }))
+  }
+
+  languageSelect?.addEventListener('change', () => {
+    const language = languageSelect.value
+    try {
+      if (language) localStorage.setItem(languageKey, language)
+      else localStorage.removeItem(languageKey)
+    } catch (_) {}
+    if (language) applyWebsiteLanguage(language)
+    else window.location.reload()
+  })
+
   const getTheme = () => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
   const updateThemeControl = () => {
     if (!themeToggle) return

@@ -7,7 +7,8 @@ const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : nul
 
 module.exports.index = async (req, res) => {
     const { mongoFilter, search } = buildListingSearch(req.query.search);
-    const filter = { ...mongoFilter };
+    // Wanderlust is focused on stays in India, including nearby and price searches.
+    const filter = { ...mongoFilter, country: /^India$/i };
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);
 
@@ -30,6 +31,35 @@ module.exports.index = async (req, res) => {
         : 10;
 
     if (hasLocation) {
+        // Older and seeded listings may not have coordinates yet. Geocode them
+        // before the geo query so they can appear in nearby results without
+        // requiring someone to open each listing first.
+        if (geocodingClient) {
+            const listingsWithoutCoordinates = await Listing.find({
+                $or: [
+                    { "geometry.coordinates": { $exists: false } },
+                    { "geometry.coordinates": { $size: 0 } },
+                ],
+            }).limit(100);
+
+            await Promise.allSettled(listingsWithoutCoordinates.map(async (listing) => {
+                if (!listing.location) return;
+                try {
+                    const query = [listing.location, listing.country].filter(Boolean).join(", ");
+                    const response = await geocodingClient
+                        .forwardGeocode({ query, limit: 1 })
+                        .send();
+                    const geometry = response.body.features?.[0]?.geometry;
+                    if (geometry?.type === "Point" && geometry.coordinates?.length === 2) {
+                        listing.geometry = geometry;
+                        await listing.save();
+                    }
+                } catch (error) {
+                    console.log(`Could not geocode listing ${listing._id}:`, error.message);
+                }
+            }));
+        }
+
         filter.geometry = {
             $near: {
                 $geometry: { type: "Point", coordinates: [longitude, latitude] },

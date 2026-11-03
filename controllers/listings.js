@@ -18,13 +18,39 @@ module.exports.index = async (req, res) => {
         filter.price = { ...(filter.price || {}), $lte: maxPrice };
     }
 
-    // Keep each request responsive; pagination can be added as the inventory grows.
-    const allListings = await Listing.find(filter).sort({ _id: -1 }).limit(100);
+    const latitude = Number(req.query.lat);
+    const longitude = Number(req.query.lng);
+    const requestedRadius = Number(req.query.radius);
+    const hasLocation = req.query.lat !== undefined && req.query.lat !== "" &&
+        req.query.lng !== undefined && req.query.lng !== "" &&
+        Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 &&
+        Number.isFinite(longitude) && longitude >= -180 && longitude <= 180;
+    const radiusKm = Number.isFinite(requestedRadius) && requestedRadius > 0
+        ? Math.min(requestedRadius, 100)
+        : 10;
+
+    if (hasLocation) {
+        filter.geometry = {
+            $near: {
+                $geometry: { type: "Point", coordinates: [longitude, latitude] },
+                $maxDistance: radiusKm * 1000,
+            },
+        };
+    }
+
+    // $near already sorts matching stays from nearest to farthest.
+    const listingsQuery = Listing.find(filter).limit(100);
+    if (!hasLocation) listingsQuery.sort({ _id: -1 });
+    const allListings = await listingsQuery;
     res.render("listings/index.ejs", {
         allListings,
         search,
         minPrice: req.query.minPrice || "",
-        maxPrice: req.query.maxPrice || ""
+        maxPrice: req.query.maxPrice || "",
+        nearby: hasLocation,
+        radiusKm,
+        latitude: hasLocation ? latitude : "",
+        longitude: hasLocation ? longitude : "",
     });
 };
 

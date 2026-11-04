@@ -16,6 +16,8 @@ const listingSchema = new Schema({
       filename: String,
     },
     price: Number,
+    rooms: { type: Number, min: 1, max: 99, default: 1 },
+    reservationVersion: { type: Number, default: 0 },
     location: String,
     country: String,
     reviews: [

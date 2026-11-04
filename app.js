@@ -21,6 +21,7 @@ const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 const bookingRouter = require("./routes/booking.js");
+const bookingController = require("./controllers/bookings.js");
 
 
 const dbUrl = process.env.ATLASDB_URL;
@@ -48,6 +49,8 @@ app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
+app.post("/payments/razorpay/webhook", express.raw({ type: "application/json" }), bookingController.webhook);
+app.use(express.json());
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname,"/public")));

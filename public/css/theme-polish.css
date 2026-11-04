@@ -30,6 +30,12 @@ html[data-theme="dark"] .navbar .nav-link:hover {
   color: #fff !important;
   background: #292d3e;
 }
+html[data-theme="dark"] .navbar .nav-link:focus-visible,
+html[data-theme="dark"] .navbar-toggler:focus-visible {
+  outline: 2px solid #c3c8ff;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
 html[data-theme="dark"] .navbar-toggler { border-color: var(--line) !important; }
 html[data-theme="dark"] .search-form,
 html[data-theme="dark"] .theme-toggle,
@@ -140,6 +146,26 @@ html[data-theme="dark"] .text-muted { color: var(--muted) !important; }
 html[data-theme="dark"] hr { border-color: var(--line) !important; opacity: 1; }
 html[data-theme="dark"] .form-control:focus,
 html[data-theme="dark"] .form-select:focus { border-color: #8c91df !important; box-shadow: 0 0 0 4px rgba(140,145,223,.16) !important; }
+html[data-theme="dark"] .price-filter select {
+  color-scheme: dark;
+  background-color: #171b25 !important;
+  border-color: #3b4255 !important;
+  color: #f1f3fa !important;
+}
+html[data-theme="dark"] .booking-form input,
+html[data-theme="dark"] .booking-form select {
+  color-scheme: dark;
+  background-color: #171b25 !important;
+  border-color: #3b4255 !important;
+  color: #f1f3fa !important;
+}
+html[data-theme="dark"] .nearby-place-card {
+  background: #1b1f2a !important;
+  border-color: #3b4255 !important;
+}
+html[data-theme="dark"] .nearby-place-card > span,
+html[data-theme="dark"] .booking-card .text-muted { color: #c4cada !important; }
+html[data-theme="dark"] .nearby-place-card .nearby-distance { color: #d9dcff !important; }
 html[data-theme="dark"] ::selection { background: #d9dcff; color: #171925; }
 
 /* Contrast fixes: listing cards intentionally remain white in dark mode.

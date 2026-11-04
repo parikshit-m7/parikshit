@@ -2,6 +2,7 @@
 <script>
   const mapToken = <%- JSON.stringify(process.env.MAP_TOKEN || "") %>;
   const listing = <%- JSON.stringify(listing) %>;
+const unavailableRanges = <%- JSON.stringify(bookedRanges.map((booking) => ({ start: booking.checkIn.toISOString().slice(0, 10), end: booking.checkOut.toISOString().slice(0, 10) }))) %>;
 </script>
 
 <div class="detail-header">
@@ -43,6 +44,22 @@
         <p class="text-muted"><i class="fa-solid fa-map-pin me-2"></i><%= listing.location %><%= listing.country ? ', ' + listing.country : '' %></p>
         <div id="map"></div>
         <p class="small text-muted mt-3 mb-0">Map pin is approximate and may depend on the location details provided by the host.</p>
+        <div class="nearby-explore" id="nearby-explore" data-url="/listings/<%= listing._id %>/nearby">
+          <div class="section-kicker">Around this stay</div>
+          <h3 class="section-title">Food, places &amp; transport nearby</h3>
+          <p class="text-muted">Restaurants, sights, railway stations, bus stops and airports within about 5 km.</p>
+          <div class="nearby-tabs" role="group" aria-label="Nearby place types">
+            <button type="button" class="nearby-tab active" data-nearby-category="all">All</button>
+            <button type="button" class="nearby-tab" data-nearby-category="food">Food</button>
+            <button type="button" class="nearby-tab" data-nearby-category="sights">Places to visit</button>
+            <button type="button" class="nearby-tab" data-nearby-category="rail">Railway</button>
+            <button type="button" class="nearby-tab" data-nearby-category="bus">Bus</button>
+            <button type="button" class="nearby-tab" data-nearby-category="airport">Airport</button>
+          </div>
+          <p id="nearby-status" class="small text-muted" role="status">Finding nearby places…</p>
+          <div class="nearby-place-grid" id="nearby-place-grid"></div>
+          <p class="nearby-attribution" id="nearby-attribution"></p>
+        </div>
       </div>
     </div>
     <div class="col-lg-4">
@@ -53,9 +70,20 @@
         <div class="d-flex gap-3 mb-3"><i class="fa-solid fa-location-dot mt-1" style="color:var(--green)"></i><div><strong>Destination</strong><div class="text-muted small"><%= listing.location %></div></div></div>
         <div class="d-flex gap-3 mb-3"><i class="fa-solid fa-earth-asia mt-1" style="color:var(--green)"></i><div><strong>Country</strong><div class="text-muted small"><%= listing.country %></div></div></div>
         <div class="d-flex gap-3"><i class="fa-solid fa-user-check mt-1" style="color:var(--green)"></i><div><strong>Local host</strong><div class="text-muted small"><%= listing.owner ? listing.owner.username : 'Wanderlust host' %></div></div></div>
-        <% if (!currUser) { %>
-          <a class="hero-btn hero-btn-primary w-100 mt-4" href="/login" style="text-align:center">Log in to review <i class="fa-solid fa-arrow-right"></i></a>
-        <% } %>
+        <hr style="border-color:var(--line);margin:22px 0">
+        <h4 class="fw-bold mb-1">Choose your dates</h4>
+        <p class="text-muted small mb-3">Send a booking request to the host. No payment is collected here.</p>
+        <form action="/listings/<%= listing._id %>/bookings" method="POST" id="booking-form" class="booking-form">
+          <label for="check-in">Check-in</label><input type="date" id="check-in" name="checkIn" min="<%= todayISO %>" required>
+          <label for="check-out">Check-out</label><input type="date" id="check-out" name="checkOut" min="<%= todayISO %>" required>
+          <label for="guest-count">Guests</label><select id="guest-count" name="guests"><% for (let count = 1; count <= 10; count++) { %><option value="<%= count %>"><%= count %> <%= count === 1 ? 'guest' : 'guests' %></option><% } %></select>
+          <div class="booking-total"><span id="booking-nights">Select dates to see total</span><strong id="booking-price">₹ <%= (listing.price || 0).toLocaleString("en-IN") %> / night</strong></div>
+          <% if (!currUser) { %><a class="hero-btn hero-btn-primary w-100 mt-3" href="/login" style="justify-content:center;text-decoration:none">Log in to request booking <i class="fa-solid fa-arrow-right"></i></a>
+          <% } else if (listing.owner && listing.owner._id.equals(currUser._id)) { %><button class="hero-btn hero-btn-primary w-100 mt-3" type="button" disabled>Your own stay</button>
+          <% } else { %><button class="hero-btn hero-btn-primary w-100 mt-3" type="submit">Request to book <i class="fa-solid fa-arrow-right"></i></button><% } %>
+          <p id="booking-date-message" class="small text-danger mt-2 mb-0" role="status"></p>
+        </form>
+        <a class="my-bookings-link" href="/bookings">View my booking requests <i class="fa-solid fa-arrow-right"></i></a>
       </div>
     </div>
   </div>
@@ -106,3 +134,5 @@
 </div>
 
 <script src="/js/map.js"></script>
+<script src="/js/nearby-places.js" defer></script>
+<script src="/js/booking-dates.js" defer></script>

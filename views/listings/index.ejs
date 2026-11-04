@@ -66,12 +66,6 @@
   <div class="filter"><i class="fa-solid fa-water"></i><p>By the water</p></div>
   <div class="filter"><i class="fa-solid fa-campground"></i><p>Outdoors</p></div>
   <div class="filter"><i class="fa-solid fa-house-chimney-window"></i><p>Hidden gems</p></div>
-  <div class="tax-toggle">
-    <div class="form-check form-switch">
-      <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault">
-      <label class="form-check-label" for="flexSwitchCheckDefault">Show total with taxes</label>
-    </div>
-  </div>
 </div>
 
 <% if (allListings.length) { %>
@@ -91,7 +85,7 @@
               <span class="listing-rating"><i class="fa-solid fa-star"></i> New</span>
             </div>
             <p class="card-text"><i class="fa-solid fa-location-dot me-1"></i><%= listing.location || 'A place to discover' %><%= listing.country ? ', ' + listing.country : '' %></p>
-            <div class="listing-price">₹ <%= listing.price ? listing.price.toLocaleString("en-IN") : "Price on request" %> <span>/ night</span><i class="tax-info"> · +18% GST</i></div>
+            <div class="listing-price">₹ <%= listing.price ? listing.price.toLocaleString("en-IN") : "Price on request" %> <span>/ night</span></div>
           </div>
         </article>
       </a>
@@ -128,12 +122,4 @@
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
   });
 
-  const taxSwitch = document.getElementById("flexSwitchCheckDefault");
-  if (taxSwitch) {
-    taxSwitch.addEventListener("change", () => {
-      document.querySelectorAll(".tax-info").forEach(info => {
-        info.style.display = taxSwitch.checked ? "inline" : "none";
-      });
-    });
-  }
 </script>

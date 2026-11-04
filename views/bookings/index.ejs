@@ -1,10 +1,10 @@
 <% layout("/layouts/boilerplate") %>
 <section class="booking-page">
   <div class="section-kicker">Your trips</div>
-  <h1 class="section-title">My booking requests</h1>
-  <p class="section-subtitle">Your dates, guest count, and request status in one place.</p>
+  <h1 class="section-title">My trips</h1>
+  <p class="section-subtitle">Your stays, selected dates, rooms, and booking status in one place.</p>
   <% if (!bookings.length) { %>
-    <div class="empty-state"><i class="fa-solid fa-suitcase-rolling"></i><h3>No booking requests yet</h3><p class="text-muted">Choose a stay and dates to plan your trip.</p><a class="hero-btn hero-btn-primary" href="/listings">Explore stays</a></div>
+    <div class="empty-state"><i class="fa-solid fa-suitcase-rolling"></i><h3>No trips yet</h3><p class="text-muted">Choose a stay, dates, and rooms to book your trip.</p><a class="hero-btn hero-btn-primary" href="/listings">Explore stays</a></div>
   <% } else { %>
     <div class="booking-list">
       <% for (const booking of bookings) { %>
@@ -13,9 +13,9 @@
           <div class="booking-card-body">
             <h2><%= booking.listing?.title || 'Stay no longer available' %></h2>
             <p class="text-muted"><%= booking.listing?.location || '' %></p>
-            <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
-            <span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Request sent · awaiting host' : booking.status %></span>
-            <% if (booking.status === 'pending') { %><form method="POST" action="/bookings/<%= booking._id %>/cancel" class="mt-3"><button class="btn btn-outline-dark btn-sm" type="submit">Cancel request</button></form><% } %>
+            <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
+            <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
+            <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status %></span><% } %>
           </div>
           <% if (booking.listing) { %><a class="booking-open" href="/listings/<%= booking.listing._id %>" aria-label="View stay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><% } %>
         </article>

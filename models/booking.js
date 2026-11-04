@@ -6,9 +6,10 @@ const bookingSchema = new mongoose.Schema({
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },
   guests: { type: Number, required: true, min: 1, max: 10 },
+  rooms: { type: Number, required: true, min: 1, default: 1 },
   nights: { type: Number, required: true, min: 1 },
   totalPrice: { type: Number, required: true, min: 0 },
-  status: { type: String, enum: ["pending", "confirmed", "cancelled", "rejected"], default: "pending" },
+  status: { type: String, enum: ["confirmed", "cancelled", "pending", "rejected", "payment_pending"], default: "confirmed" },
 }, { timestamps: true });
 
 bookingSchema.index({ listing: 1, checkIn: 1, checkOut: 1, status: 1 });

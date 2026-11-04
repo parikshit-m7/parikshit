@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const ExpressError = require("../utils/ExpressError");
@@ -8,53 +9,119 @@ const parseDate = (value) => {
   return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value ? null : date;
 };
 
-module.exports.create = async (req, res) => {
-  const listing = await Listing.findById(req.params.id);
-  if (!listing) throw new ExpressError(404, "This stay could not be found.");
-  if (listing.owner && listing.owner.equals(req.user._id)) {
-    req.flash("error", "You cannot book your own stay.");
-    return res.redirect(`/listings/${listing._id}`);
-  }
-
-  const checkIn = parseDate(req.body.checkIn);
-  const checkOut = parseDate(req.body.checkOut);
-  const guests = Number(req.body.guests);
+function bookingDates(body) {
+  const checkIn = parseDate(body.checkIn);
+  const checkOut = parseDate(body.checkOut);
   const todayISO = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
   const today = new Date(`${todayISO}T00:00:00.000Z`);
   if (!checkIn || !checkOut || checkIn < today || checkOut <= checkIn) {
-    req.flash("error", "Choose valid check-in and check-out dates.");
-    return res.redirect(`/listings/${listing._id}`);
+    return { error: "Choose valid check-in and check-out dates." };
   }
   const nights = (checkOut - checkIn) / 86400000;
-  if (nights > 30 || !Number.isInteger(guests) || guests < 1 || guests > 10) {
-    req.flash("error", "Choose up to 30 nights and between 1 and 10 guests.");
-    return res.redirect(`/listings/${listing._id}`);
-  }
+  if (!Number.isInteger(nights) || nights > 30) return { error: "Bookings can be up to 30 nights." };
+  return { checkIn, checkOut, nights };
+}
 
-  const overlap = await Booking.exists({
-    listing: listing._id,
-    status: { $in: ["pending", "confirmed"] },
+function calculateTotal(listing, nights, rooms) {
+  const totalPaise = Math.round(Number(listing.price || 0) * 100) * nights * rooms;
+  return Number.isSafeInteger(totalPaise) ? totalPaise / 100 : NaN;
+}
+
+async function reservedRooms(listingId, checkIn, checkOut, session) {
+  const query = Booking.find({
+    listing: listingId,
     checkIn: { $lt: checkOut },
     checkOut: { $gt: checkIn },
+    status: "confirmed",
+  }).select("rooms -_id");
+  if (session) query.session(session);
+  const reservations = await query.lean();
+  return reservations.reduce((sum, reservation) => sum + Math.max(1, Number(reservation.rooms) || 1), 0);
+}
+
+function jsonError(res, status, message) {
+  return res.status(status).json({ error: message });
+}
+
+module.exports.availability = async (req, res) => {
+  const listing = await Listing.findById(req.params.id).select("price rooms");
+  if (!listing) return jsonError(res, 404, "This stay could not be found.");
+  const dates = bookingDates(req.query);
+  if (dates.error) return jsonError(res, 400, dates.error);
+  const rooms = Number(req.query.rooms || 1);
+  const totalRooms = Math.max(1, Number(listing.rooms) || 1);
+  if (!Number.isInteger(rooms) || rooms < 1 || rooms > totalRooms) {
+    return jsonError(res, 400, "Choose a valid number of rooms.");
+  }
+  const usedRooms = await reservedRooms(listing._id, dates.checkIn, dates.checkOut);
+  const roomsAvailable = Math.max(0, totalRooms - usedRooms);
+  res.json({
+    available: rooms <= roomsAvailable,
+    roomsAvailable,
+    totalRooms,
+    nights: dates.nights,
+    rooms,
+    totalPrice: calculateTotal(listing, dates.nights, rooms),
   });
-  if (overlap) {
-    req.flash("error", "Those dates are no longer available. Please choose different dates.");
-    return res.redirect(`/listings/${listing._id}`);
+};
+
+module.exports.create = async (req, res) => {
+  const listing = await Listing.findById(req.params.id);
+  if (!listing) return jsonError(res, 404, "This stay could not be found.");
+  if (listing.owner && listing.owner.equals(req.user._id)) {
+    return jsonError(res, 403, "You cannot book your own stay.");
   }
 
-  await Booking.create({
-    listing: listing._id,
-    bookedBy: req.user._id,
-    checkIn,
-    checkOut,
-    guests,
-    nights,
-    totalPrice: Number(listing.price || 0) * nights,
-  });
-  req.flash("success", "Your booking request has been sent to the host.");
-  res.redirect("/bookings");
+  const dates = bookingDates(req.body);
+  if (dates.error) return jsonError(res, 400, dates.error);
+  const rooms = Number(req.body.rooms);
+  const guests = Number(req.body.guests);
+  const totalRooms = Math.max(1, Number(listing.rooms) || 1);
+  if (!Number.isInteger(rooms) || rooms < 1 || rooms > totalRooms) {
+    return jsonError(res, 400, "Choose a valid number of rooms.");
+  }
+  if (!Number.isInteger(guests) || guests < 1 || guests > 10 || guests > rooms * 6) {
+    return jsonError(res, 400, "Choose a valid guest count for the selected rooms.");
+  }
+  const totalPrice = calculateTotal(listing, dates.nights, rooms);
+  if (!(totalPrice > 0) || !Number.isFinite(totalPrice)) return jsonError(res, 400, "This stay does not have a valid price yet.");
+
+  const session = await mongoose.startSession();
+  let booking;
+  try {
+    await session.withTransaction(async () => {
+      // Updating the listing serializes overlapping bookings for the last room.
+      await Listing.updateOne({ _id: listing._id }, { $inc: { reservationVersion: 1 } }, { session });
+      const usedRooms = await reservedRooms(listing._id, dates.checkIn, dates.checkOut, session);
+      if (usedRooms + rooms > totalRooms) {
+        const error = new Error("Not enough rooms are available for those dates.");
+        error.code = "ROOMS_UNAVAILABLE";
+        throw error;
+      }
+      booking = new Booking({
+        listing: listing._id,
+        bookedBy: req.user._id,
+        checkIn: dates.checkIn,
+        checkOut: dates.checkOut,
+        nights: dates.nights,
+        guests,
+        rooms,
+        totalPrice,
+        status: "confirmed",
+      });
+      await booking.save({ session });
+    });
+  } catch (error) {
+    if (error.code === "ROOMS_UNAVAILABLE") return jsonError(res, 409, error.message);
+    console.error("Could not confirm booking:", error.message);
+    return jsonError(res, 503, "Could not confirm those rooms right now. Please check availability and try again.");
+  } finally {
+    await session.endSession();
+  }
+
+  res.status(201).json({ ok: true, bookingId: String(booking._id) });
 };
 
 module.exports.index = async (req, res) => {
@@ -73,42 +140,15 @@ module.exports.hosting = async (req, res) => {
   res.render("bookings/hosting.ejs", { bookings });
 };
 
-module.exports.updateStatus = async (req, res) => {
-  const booking = await Booking.findById(req.params.bookingId).populate("listing", "owner");
-  if (!booking || !booking.listing || !booking.listing.owner.equals(req.user._id)) {
-    throw new ExpressError(404, "Reservation could not be found.");
-  }
-  const status = req.body.status;
-  if (booking.status !== "pending" || !["confirmed", "rejected"].includes(status)) {
-    req.flash("error", "This reservation can no longer be updated.");
-    return res.redirect("/bookings/hosting");
-  }
-  if (status === "confirmed") {
-    const overlap = await Booking.exists({
-      _id: { $ne: booking._id }, listing: booking.listing._id,
-      status: { $in: ["pending", "confirmed"] },
-      checkIn: { $lt: booking.checkOut }, checkOut: { $gt: booking.checkIn },
-    });
-    if (overlap) {
-      req.flash("error", "Another request overlaps these dates. Resolve that request before confirming.");
-      return res.redirect("/bookings/hosting");
-    }
-  }
-  booking.status = status;
-  await booking.save();
-  req.flash("success", status === "confirmed" ? "Booking confirmed." : "Booking request declined.");
-  res.redirect("/bookings/hosting");
-};
-
 module.exports.cancel = async (req, res) => {
   const booking = await Booking.findOne({ _id: req.params.bookingId, bookedBy: req.user._id });
   if (!booking) throw new ExpressError(404, "Booking could not be found.");
-  if (booking.status !== "pending") {
-    req.flash("error", "Only pending booking requests can be cancelled here.");
+  if (booking.status !== "payment_pending") {
+    req.flash("error", "This booking cannot be cancelled from this page.");
     return res.redirect("/bookings");
   }
   booking.status = "cancelled";
   await booking.save();
-  req.flash("success", "Booking request cancelled.");
+  req.flash("success", "Booking cancelled.");
   res.redirect("/bookings");
 };

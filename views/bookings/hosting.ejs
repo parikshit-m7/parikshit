@@ -1,10 +1,10 @@
 <% layout("/layouts/boilerplate") %>
 <section class="booking-page">
   <div class="section-kicker">Your guests</div>
-  <h1 class="section-title">Host booking requests</h1>
-  <p class="section-subtitle">Review dates and guest counts, then confirm or decline each request.</p>
+  <h1 class="section-title">Host bookings</h1>
+  <p class="section-subtitle">Bookings are confirmed automatically when rooms are available.</p>
   <% if (!bookings.length) { %>
-    <div class="empty-state"><i class="fa-solid fa-calendar-check"></i><h3>No guest requests yet</h3><p class="text-muted">Requests for your stays will appear here.</p></div>
+    <div class="empty-state"><i class="fa-solid fa-calendar-check"></i><h3>No bookings yet</h3><p class="text-muted">Bookings for your stays will appear here.</p></div>
   <% } else { %>
     <div class="booking-list">
       <% for (const booking of bookings) { %>
@@ -12,10 +12,10 @@
           <% if (booking.listing) { %><img src="<%= booking.listing.image?.url || 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=700&q=80' %>" alt="<%= booking.listing.title %>"><% } %>
           <div class="booking-card-body">
             <h2><%= booking.listing?.title || 'Stay no longer available' %></h2>
-            <p class="text-muted">Requested by <%= booking.bookedBy?.username || 'Wanderlust guest' %></p>
-            <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
-            <span class="booking-status status-<%= booking.status %>"><%= booking.status %></span>
-            <% if (booking.status === 'pending') { %><div class="host-response-actions"><form method="POST" action="/bookings/<%= booking._id %>/status"><input type="hidden" name="status" value="confirmed"><button class="btn btn-success btn-sm" type="submit">Confirm</button></form><form method="POST" action="/bookings/<%= booking._id %>/status"><input type="hidden" name="status" value="rejected"><button class="btn btn-outline-dark btn-sm" type="submit">Decline</button></form></div><% } %>
+            <p class="text-muted">Booked by <%= booking.bookedBy?.username || 'Wanderlust guest' %></p>
+            <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
+            <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
+            <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status %></span><% } %>
           </div>
           <% if (booking.listing) { %><a class="booking-open" href="/listings/<%= booking.listing._id %>" aria-label="View stay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><% } %>
         </article>

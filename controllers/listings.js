@@ -134,13 +134,7 @@ module.exports.showListing = async (req, res) => {
     const todayISO = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
     }).format(new Date());
-    const bookedRanges = await Booking.find({
-        listing: listing._id,
-        status: { $in: ["pending", "confirmed"] },
-        checkOut: { $gt: new Date(`${todayISO}T00:00:00.000Z`) },
-    }).select("checkIn checkOut -_id").lean();
-
-    res.render("listings/show.ejs", { listing, bookedRanges, todayISO });
+    res.render("listings/show.ejs", { listing, todayISO });
 };
 
 module.exports.nearbyPlaces = async (req, res) => {

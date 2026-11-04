@@ -1,4 +1,5 @@
 const Listing = require("../models/listing");
+const Booking = require("../models/booking");
 const { buildListingSearch } = require("../utils/listingSearch");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
@@ -130,7 +131,66 @@ module.exports.showListing = async (req, res) => {
         }
     }
 
-    res.render("listings/show.ejs", { listing });
+    const todayISO = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const bookedRanges = await Booking.find({
+        listing: listing._id,
+        status: { $in: ["pending", "confirmed"] },
+        checkOut: { $gt: new Date(`${todayISO}T00:00:00.000Z`) },
+    }).select("checkIn checkOut -_id").lean();
+
+    res.render("listings/show.ejs", { listing, bookedRanges, todayISO });
+};
+
+module.exports.nearbyPlaces = async (req, res) => {
+    const listing = await Listing.findById(req.params.id).select("geometry");
+    const coordinates = listing?.geometry?.coordinates;
+    if (!coordinates || coordinates.length !== 2 || !coordinates.every(Number.isFinite)) {
+        return res.status(404).json({ message: "Map location is not available for this stay yet." });
+    }
+
+    const [longitude, latitude] = coordinates;
+    const query = `[out:json][timeout:12];(nwr(around:5000,${latitude},${longitude})[amenity~"^(restaurant|cafe|fast_food|food_court)$"];nwr(around:5000,${latitude},${longitude})[tourism~"^(attraction|museum|viewpoint|zoo|theme_park)$"];nwr(around:5000,${latitude},${longitude})[railway~"^(station|halt)$"];nwr(around:5000,${latitude},${longitude})[amenity="bus_station"];nwr(around:5000,${latitude},${longitude})[highway="bus_stop"];nwr(around:5000,${latitude},${longitude})[aeroway="aerodrome"];);out center tags 80;`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 14000);
+    try {
+        const response = await fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", "User-Agent": "WanderlustIndia/1.0" },
+            body: new URLSearchParams({ data: query }),
+            signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`Nearby places service returned ${response.status}`);
+        const data = await response.json();
+        const radians = (degrees) => degrees * Math.PI / 180;
+        const haversineKm = (lat, lon) => {
+            const dLat = radians(lat - latitude);
+            const dLon = radians(lon - longitude);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(latitude)) * Math.cos(radians(lat)) * Math.sin(dLon / 2) ** 2;
+            return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+        const places = (data.elements || []).map((place) => {
+            const tags = place.tags || {};
+            const lat = place.lat ?? place.center?.lat;
+            const lon = place.lon ?? place.center?.lon;
+            if (!tags.name || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+            let category;
+            if (/^(restaurant|cafe|fast_food|food_court)$/.test(tags.amenity || "")) category = "food";
+            else if (/^(attraction|museum|viewpoint|zoo|theme_park)$/.test(tags.tourism || "")) category = "sights";
+            else if (["station", "halt"].includes(tags.railway)) category = "rail";
+            else if (tags.amenity === "bus_station" || tags.highway === "bus_stop") category = "bus";
+            else if (tags.aeroway === "aerodrome") category = "airport";
+            if (!category) return null;
+            return { name: tags.name, category, distanceKm: haversineKm(lat, lon), lat, lon, cuisine: tags.cuisine || "" };
+        }).filter(Boolean).sort((a, b) => a.distanceKm - b.distanceKm).slice(0, 60);
+        res.json({ places, attribution: "OpenStreetMap contributors" });
+    } catch (error) {
+        console.error("Nearby places lookup failed:", error.message);
+        res.status(502).json({ message: "Nearby places are temporarily unavailable. Please try again shortly." });
+    } finally {
+        clearTimeout(timeout);
+    }
 };
 
 

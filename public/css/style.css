@@ -439,3 +439,28 @@ img, video, canvas, svg { max-width: 100%; }
   .hero-actions .hero-btn { width:100%; justify-content:center; }
   .price-filter { grid-template-columns:1fr !important; }
 }
+
+/* Booking and nearby discovery */
+.booking-form { display:grid; gap:9px; }
+.booking-form label { font-size:.86rem; font-weight:700; }
+.booking-form input,.booking-form select { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; color:inherit; }
+.booking-total { display:flex; justify-content:space-between; gap:10px; padding:14px 0 4px; border-top:1px solid var(--line); }
+.my-bookings-link { display:flex; justify-content:center; gap:8px; margin-top:14px; color:var(--green); font-weight:700; text-decoration:none; }
+.nearby-explore { margin-top:30px; padding-top:26px; border-top:1px solid var(--line); }
+.nearby-tabs,.host-response-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.nearby-tab { border:1px solid var(--line); border-radius:999px; background:white; padding:8px 13px; white-space:nowrap; }
+.nearby-tab.active { background:var(--green); border-color:var(--green); color:white; }
+.nearby-place-grid,.booking-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+.nearby-place-card,.booking-card { display:grid; gap:7px; padding:15px; border:1px solid var(--line); border-radius:15px; background:var(--card); }
+.nearby-place-card > span,.booking-facts strong { color:#68726d; font-size:.82rem; }
+.nearby-place-card a,.booking-open,.my-bookings-link { color:var(--green); }
+.booking-page { padding:30px 0 60px; }
+.booking-card { grid-template-columns:140px minmax(0,1fr) 24px; align-items:center; }
+.booking-card > img { width:140px; height:110px; border-radius:12px; object-fit:cover; }
+.booking-facts { display:flex; flex-wrap:wrap; gap:12px 22px; }
+.booking-facts span { display:grid; }
+.booking-status { display:inline-block; margin-top:12px; padding:6px 10px; border-radius:999px; background:#fff3d9; color:#795411; font-size:.8rem; font-weight:700; }
+.status-confirmed { background:#e5f4ec; color:#245d40; }
+.status-cancelled,.status-rejected { background:#fce9e8; color:#873c38; }
+.nearby-attribution { margin-top:10px; color:#77807b; font-size:.72rem; }
+@media(max-width:600px){.booking-card{grid-template-columns:76px minmax(0,1fr) 18px;gap:10px}.booking-card>img{width:76px;height:86px}}

@@ -8,8 +8,6 @@
   const guests = document.getElementById("guest-count");
   const nightsLabel = document.getElementById("booking-nights");
   const priceLabel = document.getElementById("booking-price");
-  const depositLabel = document.getElementById("booking-deposit");
-  const balanceLabel = document.getElementById("booking-balance");
   const availabilityLabel = document.getElementById("booking-availability");
   const message = document.getElementById("booking-date-message");
   const bookButton = document.getElementById("book-now-button");
@@ -33,8 +31,6 @@
       availabilityLabel.textContent = "Choose valid dates to check rooms.";
       nightsLabel.textContent = "Select dates";
       priceLabel.textContent = `${formatINR(Number(listing.price) || 0)} / room / night`;
-      depositLabel.textContent = "—";
-      balanceLabel.textContent = "—";
       return;
     }
 
@@ -51,8 +47,6 @@
         : `Only ${data.roomsAvailable} room${data.roomsAvailable === 1 ? " is" : "s are"} available for these dates.`;
       nightsLabel.textContent = `${data.nights} ${data.nights === 1 ? "night" : "nights"} · ${data.rooms} ${data.rooms === 1 ? "room" : "rooms"}`;
       priceLabel.textContent = `${formatINR(data.totalPrice)} total`;
-      depositLabel.textContent = formatINR(data.depositAmount);
-      balanceLabel.textContent = formatINR(data.remainingAmount);
       if (bookButton) bookButton.disabled = !data.available;
     } catch (error) {
       if (currentLookup !== lookupId) return;
@@ -80,64 +74,27 @@
       await updateAvailability();
       return;
     }
-    if (typeof window.Razorpay !== "function") {
-      message.textContent = "Secure payment checkout could not load. Please refresh and try again.";
-      return;
-    }
-
-    if (bookButton) { bookButton.disabled = true; bookButton.textContent = "Holding rooms…"; }
-    message.textContent = "Your selected rooms are being held while checkout opens.";
+    if (bookButton) { bookButton.disabled = true; bookButton.textContent = "Confirming booking…"; }
+    message.textContent = "Checking room availability and confirming your booking…";
     try {
       const response = await fetch(form.action, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
         body: new URLSearchParams(new FormData(form)),
       });
-      const order = await response.json();
-      if (!response.ok) throw new Error(order.error || "Could not start your booking.");
-
-      const checkout = new Razorpay({
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Wanderlust",
-        description: `${order.listingTitle} · 50% booking deposit`,
-        order_id: order.orderId,
-        prefill: order.user,
-        notes: { booking_id: order.bookingId },
-        theme: { color: "#244b3e" },
-        modal: { ondismiss: () => {
-          message.textContent = `Checkout closed. Your rooms are held for ${order.holdMinutes} minutes; you can retry from My trips.`;
-          if (bookButton) { bookButton.disabled = false; bookButton.innerHTML = 'Try payment again <i class="fa-solid fa-arrow-right"></i>'; }
-        } },
-        handler: async (payment) => {
-          message.textContent = "Payment received. Verifying and confirming your booking…";
-          try {
-            const verification = await fetch(`/bookings/${encodeURIComponent(order.bookingId)}/confirm`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Accept: "application/json" },
-              body: JSON.stringify(payment),
-            });
-            const result = await verification.json();
-            if (!verification.ok) throw new Error(result.error || "Payment verification is still pending.");
-            message.classList.remove("text-danger");
-            message.classList.add("text-success");
-            message.textContent = "Booked! Your 50% advance is paid and your rooms are confirmed.";
-            window.location.assign("/bookings");
-          } catch (error) {
-            message.textContent = `${error.message} Check My trips before paying again.`;
-            if (bookButton) { bookButton.disabled = false; bookButton.innerHTML = 'Check booking status <i class="fa-solid fa-arrow-right"></i>'; }
-          }
-        },
-      });
-      checkout.on("payment.failed", (failure) => {
-        message.textContent = failure.error?.description || `Payment failed. Your rooms are held for ${order.holdMinutes} minutes while you retry.`;
-        if (bookButton) { bookButton.disabled = false; bookButton.innerHTML = 'Try payment again <i class="fa-solid fa-arrow-right"></i>'; }
-      });
-      checkout.open();
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not confirm your booking.");
+      message.classList.remove("text-danger");
+      message.classList.add("text-success");
+      message.textContent = "Booking confirmed! Opening My trips…";
+      window.location.assign("/bookings");
     } catch (error) {
       message.textContent = error.message;
-      if (bookButton) { bookButton.disabled = !isAvailable; bookButton.innerHTML = 'Book now &amp; pay 50% <i class="fa-solid fa-arrow-right"></i>'; }
+      if (bookButton) {
+        bookButton.disabled = !isAvailable;
+        bookButton.innerHTML = 'Confirm booking <i class="fa-solid fa-arrow-right"></i>';
+      }
+      if (error.message.includes("available")) updateAvailability();
     }
   });
 })();

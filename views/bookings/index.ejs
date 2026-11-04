@@ -2,7 +2,7 @@
 <section class="booking-page">
   <div class="section-kicker">Your trips</div>
   <h1 class="section-title">My trips</h1>
-  <p class="section-subtitle">Your confirmed stays, payment status, and room holds in one place.</p>
+  <p class="section-subtitle">Your stays, selected dates, rooms, and booking status in one place.</p>
   <% if (!bookings.length) { %>
     <div class="empty-state"><i class="fa-solid fa-suitcase-rolling"></i><h3>No trips yet</h3><p class="text-muted">Choose a stay, dates, and rooms to book your trip.</p><a class="hero-btn hero-btn-primary" href="/listings">Explore stays</a></div>
   <% } else { %>
@@ -14,17 +14,8 @@
             <h2><%= booking.listing?.title || 'Stay no longer available' %></h2>
             <p class="text-muted"><%= booking.listing?.location || '' %></p>
             <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
-            <% if (booking.status === 'payment_pending') { %>
-              <span class="booking-status status-pending">Payment pending · room held until <%= booking.holdExpiresAt?.toLocaleTimeString("en-IN", {hour:"numeric",minute:"2-digit"}) %></span>
-              <p class="small mt-2 mb-2">Pay ₹ <%= booking.depositAmount.toLocaleString("en-IN") %> now (50%). Remaining ₹ <%= (booking.totalPrice - booking.depositAmount).toLocaleString("en-IN") %> is due at the stay.</p>
-              <% if (paymentReady) { %><button class="btn btn-dark btn-sm retry-payment" type="button" data-booking-id="<%= booking._id %>">Continue payment</button><% } %>
-              <form method="POST" action="/bookings/<%= booking._id %>/cancel" class="d-inline"><button class="btn btn-outline-dark btn-sm" type="submit">Cancel hold</button></form>
-            <% } else if (booking.status === 'confirmed') { %>
-              <span class="booking-status status-confirmed">Booked · 50% deposit paid</span>
-              <p class="small mt-2 mb-0">Paid ₹ <%= Number(booking.amountPaid || booking.depositAmount || 0).toLocaleString("en-IN") %>. Remaining ₹ <%= Math.max(0, booking.totalPrice - Number(booking.amountPaid || booking.depositAmount || 0)).toLocaleString("en-IN") %> is due at the stay.</p>
-            <% } else { %>
-              <span class="booking-status status-<%= booking.status %>"><%= booking.status === 'payment_refunded' ? 'Payment refunded' : booking.status === 'payment_failed' ? 'Payment failed' : booking.status %></span>
-            <% } %>
+            <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
+            <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status %></span><% } %>
           </div>
           <% if (booking.listing) { %><a class="booking-open" href="/listings/<%= booking.listing._id %>" aria-label="View stay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><% } %>
         </article>
@@ -32,4 +23,3 @@
     </div>
   <% } %>
 </section>
-<% if (paymentReady) { %><script src="https://checkout.razorpay.com/v1/checkout.js"></script><script src="/js/retry-booking.js" defer></script><% } %>

@@ -9,12 +9,7 @@ const bookingSchema = new mongoose.Schema({
   rooms: { type: Number, required: true, min: 1, default: 1 },
   nights: { type: Number, required: true, min: 1 },
   totalPrice: { type: Number, required: true, min: 0 },
-  depositAmount: { type: Number, required: true, min: 0, default: 0 },
-  amountPaid: { type: Number, min: 0, default: 0 },
-  razorpayOrderId: { type: String, index: true, sparse: true },
-  razorpayPaymentId: { type: String, index: true, sparse: true },
-  holdExpiresAt: { type: Date, index: true },
-  status: { type: String, enum: ["payment_pending", "confirmed", "payment_failed", "payment_refunded", "cancelled", "pending", "rejected"], default: "payment_pending" },
+  status: { type: String, enum: ["confirmed", "cancelled", "pending", "rejected", "payment_pending"], default: "confirmed" },
 }, { timestamps: true });
 
 bookingSchema.index({ listing: 1, checkIn: 1, checkOut: 1, status: 1 });

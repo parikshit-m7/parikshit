@@ -83,7 +83,7 @@
           <div class="listing-image-wrap">
             <img src="<%= listing.image && listing.image.url ? listing.image.url : 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=900&q=80' %>"
               class="card-img-top" alt="<%= listing.title %>" loading="lazy">
-            <span class="listing-badge"><i class="fa-solid fa-leaf me-1"></i> Worth discovering</span>
+            <span class="listing-badge"><i class="fa-solid <%= listing.isDemo ? 'fa-flask' : 'fa-leaf' %> me-1"></i> <%= listing.isDemo ? 'Demo stay' : 'Worth discovering' %></span>
             <button class="listing-heart" type="button" data-favorite-id="<%= listing._id %>" aria-label="Save <%= listing.title %>" aria-pressed="false" title="Save this stay"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
           </div>
           <div class="card-body">

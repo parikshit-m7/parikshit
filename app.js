@@ -17,6 +17,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const User = require("./models/user.js");
 const Listing = require("./models/listing.js");
+const ensureDemoListings = require("./utils/ensureDemoListings.js");
 
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
@@ -43,6 +44,7 @@ main()
 
 async function main() {
     await mongoose.connect(dbUrl);
+    await ensureDemoListings();
 }
 
 app.set("trust proxy", 1);

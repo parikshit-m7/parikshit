@@ -46,7 +46,7 @@ function jsonError(res, status, message) {
 }
 
 module.exports.availability = async (req, res) => {
-  const listing = await Listing.findById(req.params.id).select("price rooms");
+  const listing = await Listing.findOne({ _id: req.params.id, isArchived: { $ne: true } }).select("price rooms");
   if (!listing) return jsonError(res, 404, "This stay could not be found.");
   const dates = bookingDates(req.query);
   if (dates.error) return jsonError(res, 400, dates.error);
@@ -70,6 +70,7 @@ module.exports.availability = async (req, res) => {
 module.exports.create = async (req, res) => {
   const listing = await Listing.findById(req.params.id);
   if (!listing) return jsonError(res, 404, "This stay could not be found.");
+  if (listing.isArchived) return jsonError(res, 404, "This stay is no longer available for booking.");
   if (listing.owner && listing.owner.equals(req.user._id)) {
     return jsonError(res, 403, "You cannot book your own stay.");
   }

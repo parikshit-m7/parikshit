@@ -493,3 +493,18 @@ html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[styl
   outline: 3px solid #a6cfb3;
   outline-offset: 3px;
 }
+/* Match recovery buttons to the dark login button. */
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary {
+  background: linear-gradient(135deg, #5a5da7, #44477f) !important;
+  border-color: #5a5da7 !important;
+  color: #fff !important;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary:hover {
+  background: #686bb9 !important;
+  border-color: #686bb9 !important;
+  color: #fff !important;
+}
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary:focus-visible {
+  outline-color: #c3c8ff;
+}

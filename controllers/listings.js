@@ -4,6 +4,14 @@ const { buildListingSearch } = require("../utils/listingSearch");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
 const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : null;
+const categorySearchTerms = {
+    "slow-stays": "slow|relax(?:ed|ing)?|peaceful|quiet|retreat|wellness|spa|long stay|serene|calm",
+    "city-breaks": "city|urban|metro|Mumbai|Delhi|Jaipur|Agra|Amritsar|Ayodhya|Mysuru|Varanasi|Goa",
+    mountains: "mountain|hill|Himalaya|Manali|Leh|Ladakh|Shimla|Mussoorie|Nainital|Darjeeling|Ooty",
+    "by-water": "beach|coast|coastal|river|lake|backwater|waterfront|sea|Goa|Mumbai|Kerala|Udaipur|Varanasi|Rishikesh|Alleppey|Alappuzha",
+    outdoors: "outdoor|camp(?:ing)?|trek(?:king)?|hike|nature|forest|wildlife|adventure|national park|Manali|Leh|Goa|Kerala|Rishikesh|Ooty|pine|hillside",
+    "hidden-gems": "hidden|offbeat|secluded|boutique|unique|secret|unexplored|lesser-known|cottage|guesthouse|haveli|houseboat|courtyard|bungalow",
+};
 
 
 module.exports.index = async (req, res) => {
@@ -12,7 +20,18 @@ module.exports.index = async (req, res) => {
     const category = categoryOptions.includes(req.query.category) ? req.query.category : "";
     // Wanderlust is focused on stays in India, including nearby and price searches.
     const filter = { ...mongoFilter, country: /^India$/i };
-    if (category && category !== "trending") filter.categories = category;
+    if (category && category !== "trending") {
+        const categoryPattern = new RegExp(categorySearchTerms[category], "i");
+        const categoryMatches = [
+            { categories: category },
+            ...["title", "description", "location"].map((field) => ({ [field]: categoryPattern })),
+        ];
+        if (category === "hidden-gems") categoryMatches.push({ reviews: { $size: 0 } });
+        filter.$and = [
+            ...(filter.$and || []),
+            { $or: categoryMatches },
+        ];
+    }
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);
 

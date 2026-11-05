@@ -107,12 +107,29 @@
         <label for="location" class="form-label">Location</label>
 
         <input
+          id="location"
           name="listing[location]"
           value="<%= listing.location %>"
+          list="popular-indian-locations"
           type="text"
           class="form-control"
           required
         />
+        <datalist id="popular-indian-locations">
+          <option value="Taj Mahal, Agra"></option>
+          <option value="Varanasi, Uttar Pradesh"></option>
+          <option value="Jaipur, Rajasthan"></option>
+          <option value="Goa"></option>
+          <option value="Delhi"></option>
+          <option value="Kerala"></option>
+          <option value="Udaipur, Rajasthan"></option>
+          <option value="Manali, Himachal Pradesh"></option>
+          <option value="Mumbai, Maharashtra"></option>
+          <option value="Amritsar, Punjab"></option>
+          <option value="Ayodhya, Uttar Pradesh"></option>
+          <option value="Mysuru, Karnataka"></option>
+        </datalist>
+        <div class="form-text">Choose one of these popular Indian places, or type the full location of your stay.</div>
         <div class="invalid-feedback">
           Location should be valid.
         </div>

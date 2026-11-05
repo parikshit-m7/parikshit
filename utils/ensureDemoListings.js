@@ -15,6 +15,7 @@ const demoListings = [
     location: "Taj Mahal, Agra",
     country: "India",
     categories: ["city-breaks"],
+    geometry: { type: "Point", coordinates: [78.0421, 27.1751] },
   },
   {
     demoKey: "popular-demo-delhi",
@@ -30,6 +31,7 @@ const demoListings = [
     location: "Delhi",
     country: "India",
     categories: ["city-breaks"],
+    geometry: { type: "Point", coordinates: [77.209, 28.6139] },
   },
   {
     demoKey: "popular-demo-amritsar",
@@ -45,15 +47,17 @@ const demoListings = [
     location: "Amritsar, Punjab",
     country: "India",
     categories: ["city-breaks"],
+    geometry: { type: "Point", coordinates: [74.8723, 31.634] },
   },
 ];
 
 module.exports = async function ensureDemoListings() {
   for (const listing of demoListings) {
     try {
+      const { geometry, ...listingFields } = listing;
       await Listing.updateOne(
         { demoKey: listing.demoKey },
-        { $setOnInsert: listing },
+        { $set: { geometry }, $setOnInsert: listingFields },
         { upsert: true }
       );
     } catch (error) {

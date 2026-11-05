@@ -15,7 +15,7 @@
       <div class="navbar-nav me-lg-2">
         <a class="nav-link" href="/listings">Discover stays</a>
         <% if (currUser) { %><a class="nav-link" href="/bookings">My trips</a><% } %>
-        <% if (currUser) { %><a class="nav-link" href="/bookings/hosting">Host bookings</a><% } %>
+        <% if (currUser && hasHostListings) { %><a class="nav-link" href="/bookings/hosting">Host bookings</a><% } %>
         <button class="nav-link saved-stays-toggle" type="button" data-favorites-filter aria-pressed="false" aria-label="Show saved stays">
           <i class="fa-regular fa-heart me-1" aria-hidden="true"></i> Saved <span class="saved-count" data-favorites-count>0</span>
         </button>

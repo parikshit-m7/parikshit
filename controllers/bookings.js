@@ -133,10 +133,14 @@ module.exports.index = async (req, res) => {
 
 module.exports.hosting = async (req, res) => {
   const stays = await Listing.find({ owner: req.user._id }).select("_id");
-  const bookings = stays.length ? await Booking.find({ listing: { $in: stays.map((stay) => stay._id) } })
+  if (!stays.length) {
+    req.flash("error", "Pehle apni stay listing banao, phir host bookings dekh paoge.");
+    return res.redirect("/listings/new");
+  }
+  const bookings = await Booking.find({ listing: { $in: stays.map((stay) => stay._id) } })
     .populate("listing", "title location image")
     .populate("bookedBy", "username")
-    .sort({ createdAt: -1 }) : [];
+    .sort({ createdAt: -1 });
   res.render("bookings/hosting.ejs", { bookings });
 };
 

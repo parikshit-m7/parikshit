@@ -16,6 +16,7 @@ const flash  =  require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const User = require("./models/user.js");
+const Listing = require("./models/listing.js");
 
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
@@ -93,7 +94,7 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.use((req, res, next) =>{
+app.use(async (req, res, next) =>{
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error"); 
     res.locals.fieldErrors = {};
@@ -110,7 +111,14 @@ app.use((req, res, next) =>{
         }
     }
     res.locals.currUser = req.user;
-    next();
+    try {
+        res.locals.hasHostListings = req.user
+            ? Boolean(await Listing.exists({ owner: req.user._id }))
+            : false;
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
 // app.get("/demouser", async (req, res, next) =>{

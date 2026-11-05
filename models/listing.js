@@ -20,6 +20,13 @@ const listingSchema = new Schema({
     reservationVersion: { type: Number, default: 0 },
     location: String,
     country: String,
+    categories: {
+        type: [{
+            type: String,
+            enum: ["slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems"],
+        }],
+        default: [],
+    },
     reviews: [
         {
             type: Schema.Types.ObjectId,

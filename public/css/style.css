@@ -99,8 +99,10 @@ a { color: inherit; }
 #filters { display:flex; flex-wrap:wrap; align-items:center; gap:9px; padding:4px 0 18px; border-bottom:1px solid var(--line); }
 .filter { display:flex; align-items:center; gap:8px; margin:0; padding:10px 14px; border:1px solid transparent; border-radius:999px; color:#67746b; cursor:pointer; transition:all .2s; }
 .filter i { font-size:.92rem; }
-.filter p { margin:0; font-size:.79rem; font-weight:700; white-space:nowrap; }
+.filter span { margin:0; font-size:.79rem; font-weight:700; white-space:nowrap; }
+.filter { font:inherit; background:transparent; }
 .filter:hover { background:#fff; border-color:var(--line); color:var(--green); transform:translateY(-1px); }
+.filter.active { background:#eef2e8; border-color:#c8d0c2; color:#314638; }
 
 /* Listing cards */
 .listing-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:28px 22px; margin:24px 0 56px; }

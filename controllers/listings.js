@@ -129,9 +129,16 @@ module.exports.index = async (req, res) => {
         );
         return { ...destination, listing };
     });
+    const showUnfilteredFeatured = !search && !category && !hasLocation &&
+        !req.query.minPrice && !req.query.maxPrice;
+    const displayListings = showUnfilteredFeatured
+        ? [...new Map([...allListings, ...featuredDestinations.map((destination) => destination.listing).filter(Boolean)]
+            .map((listing) => [String(listing._id), listing])).values()]
+        : allListings;
 
     res.render("listings/index.ejs", {
         allListings,
+        displayListings,
         featuredDestinations,
         search,
         category,

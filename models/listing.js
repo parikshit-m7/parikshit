@@ -20,6 +20,8 @@ const listingSchema = new Schema({
     reservationVersion: { type: Number, default: 0 },
     location: String,
     country: String,
+    demoKey: { type: String, unique: true, sparse: true },
+    isDemo: { type: Boolean, default: false },
     categories: {
         type: [{
             type: String,

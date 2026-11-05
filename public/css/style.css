@@ -350,6 +350,7 @@ html[data-theme="dark"] ::selection { background:#d8f078; color:#18241f; }
 /* Login and signup */
 .auth-shell { width:100%; display:flex; justify-content:center; align-items:center; padding:48px 18px 72px; }
 .auth-card { width:min(100%, 480px); padding:38px 40px 30px; background:var(--card); border:1px solid var(--line); border-radius:26px; box-shadow:var(--shadow); }
+.auth-recovery-card { background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:26px; box-shadow:var(--shadow); }
 .auth-brand-mark { margin:0 auto 18px; width:44px; height:44px; border-radius:16px 16px 16px 5px; font-size:1.4rem; }
 .auth-eyebrow { margin:0 0 7px; text-align:center; color:var(--green); font-size:.72rem; font-weight:800; letter-spacing:.13em; }
 .auth-title { margin:0 0 22px; text-align:center; font-family:Manrope,sans-serif; font-size:clamp(1.55rem, 4vw, 2rem); font-weight:800; letter-spacing:-.045em; }

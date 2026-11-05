@@ -8,7 +8,7 @@ const demoListings = [
     description: "Sample stay for previewing the Agra booking flow. This demo listing uses sample details and a sample nightly rate.",
     image: {
       filename: "demo-agra",
-      url: "https://images.unsplash.com/photo-1523979934836-981ca2ded72f?auto=format&fit=crop&w=900&q=80",
+      url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",
     },
     price: 5500,
     rooms: 4,
@@ -24,7 +24,7 @@ const demoListings = [
     description: "Sample stay for previewing the Delhi booking flow. This demo listing uses sample details and a sample nightly rate.",
     image: {
       filename: "demo-delhi",
-      url: "https://images.unsplash.com/photo-1609258678760-ba05d9b95bb9?auto=format&fit=crop&w=900&q=80",
+      url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=900&q=80",
     },
     price: 4800,
     rooms: 3,
@@ -40,7 +40,7 @@ const demoListings = [
     description: "Sample stay for previewing the Amritsar booking flow. This demo listing uses sample details and a sample nightly rate.",
     image: {
       filename: "demo-amritsar",
-      url: "https://images.unsplash.com/photo-1676490081752-2cd8404a8609?auto=format&fit=crop&w=900&q=80",
+      url: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=80",
     },
     price: 3600,
     rooms: 2,
@@ -54,10 +54,10 @@ const demoListings = [
 module.exports = async function ensureDemoListings() {
   for (const listing of demoListings) {
     try {
-      const { geometry, ...listingFields } = listing;
+      const { geometry, image, ...listingFields } = listing;
       await Listing.updateOne(
         { demoKey: listing.demoKey },
-        { $set: { geometry }, $setOnInsert: listingFields },
+        { $set: { geometry, image }, $setOnInsert: listingFields },
         { upsert: true }
       );
     } catch (error) {

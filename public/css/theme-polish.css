@@ -433,3 +433,7 @@ body { top: 0 !important; }
 @media (max-width: 419.98px) {
   .listing-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }
+/* Dark theme hero accent: slightly deeper lavender. */
+html[data-theme="dark"] .hero-copy .eyebrow,
+html[data-theme="dark"] .hero-title em { color: #a5aae8 !important; }
+html[data-theme="dark"] .hero-copy .eyebrow::before { background: #a5aae8; }

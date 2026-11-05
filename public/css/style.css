@@ -207,6 +207,18 @@ a { color: inherit; }
 @media(max-width:900px){.destination-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:480px){.destination-grid{grid-template-columns:1fr;}.destination-tile{padding:13px;}}
 
+/* Photo cards for popular Indian destinations */
+.destination-photo-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; }
+.destination-photo-card { display:flex; flex-direction:column; min-width:0; overflow:hidden; border-radius:20px; color:var(--ink); text-decoration:none; transition:transform .25s,box-shadow .25s; }
+.destination-photo-card:hover { transform:translateY(-5px); box-shadow:var(--shadow); color:var(--green); }
+.destination-photo-card img { display:block; width:100%; aspect-ratio:4 / 3; object-fit:cover; border-radius:20px; transition:transform .65s cubic-bezier(.2,.7,.2,1); }
+.destination-photo-card:hover img { transform:scale(1.045); }
+.destination-photo-copy { display:flex; flex-direction:column; gap:4px; padding:13px 2px 4px; }
+.destination-photo-copy strong { color:var(--ink); font-size:1rem; font-weight:800; }
+.destination-photo-copy span { color:var(--muted); font-size:.83rem; }
+@media(max-width:900px){.destination-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:480px){.destination-photo-grid{gap:14px 10px;}.destination-photo-card img{border-radius:15px;}.destination-photo-copy{padding-top:9px;}.destination-photo-copy strong{font-size:.9rem;}.destination-photo-copy span{font-size:.72rem;}}
+
 .price-filter{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:18px 0 8px;padding:15px;background:#f1f3ec;border:1px solid var(--line);border-radius:18px}
 .price-filter label{font-size:.8rem;font-weight:700;color:#53625a}
 .price-filter input{width:115px;max-width:100%;padding:9px 11px;border:1px solid #dfe4dc;border-radius:10px;background:#fff}

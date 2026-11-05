@@ -22,14 +22,18 @@
     <div><div class="section-kicker">Explore India</div><h2 class="section-title">Where will you go next?</h2><p class="section-subtitle">Discover stays and local escapes across India.</p></div>
   </div>
   <div class="destination-grid">
-    <a class="destination-tile" href="/listings?search=Goa"><span class="destination-icon"><i class="fa-solid fa-umbrella-beach"></i></span><span><strong>Goa</strong><small>India · Beach escapes</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
-    <a class="destination-tile" href="/listings?search=Manali"><span class="destination-icon"><i class="fa-solid fa-mountain-sun"></i></span><span><strong>Manali</strong><small>India · Mountain air</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Agra"><span class="destination-icon"><i class="fa-solid fa-landmark"></i></span><span><strong>Agra</strong><small>India · Taj Mahal &amp; heritage</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Varanasi"><span class="destination-icon"><i class="fa-solid fa-place-of-worship"></i></span><span><strong>Varanasi</strong><small>India · Ghats &amp; culture</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
     <a class="destination-tile" href="/listings?search=Jaipur"><span class="destination-icon"><i class="fa-solid fa-landmark"></i></span><span><strong>Jaipur</strong><small>India · Heritage stays</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Goa"><span class="destination-icon"><i class="fa-solid fa-umbrella-beach"></i></span><span><strong>Goa</strong><small>India · Beach escapes</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Delhi"><span class="destination-icon"><i class="fa-solid fa-city"></i></span><span><strong>Delhi</strong><small>India · History &amp; city life</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
     <a class="destination-tile" href="/listings?search=Kerala"><span class="destination-icon"><i class="fa-solid fa-water"></i></span><span><strong>Kerala</strong><small>India · Backwaters</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
-    <a class="destination-tile" href="/listings?search=Mumbai"><span class="destination-icon"><i class="fa-solid fa-city"></i></span><span><strong>Mumbai</strong><small>India · City by the sea</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
     <a class="destination-tile" href="/listings?search=Udaipur"><span class="destination-icon"><i class="fa-solid fa-water"></i></span><span><strong>Udaipur</strong><small>India · Lakeside stays</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
-    <a class="destination-tile" href="/listings?search=Rishikesh"><span class="destination-icon"><i class="fa-solid fa-person-hiking"></i></span><span><strong>Rishikesh</strong><small>India · River &amp; hills</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
-    <a class="destination-tile" href="/listings?search=Leh"><span class="destination-icon"><i class="fa-solid fa-mountain-sun"></i></span><span><strong>Leh</strong><small>India · Himalayan escapes</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Manali"><span class="destination-icon"><i class="fa-solid fa-mountain-sun"></i></span><span><strong>Manali</strong><small>India · Mountain air</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Mumbai"><span class="destination-icon"><i class="fa-solid fa-city"></i></span><span><strong>Mumbai</strong><small>India · City by the sea</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Amritsar"><span class="destination-icon"><i class="fa-solid fa-place-of-worship"></i></span><span><strong>Amritsar</strong><small>India · Golden Temple</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Ayodhya"><span class="destination-icon"><i class="fa-solid fa-place-of-worship"></i></span><span><strong>Ayodhya</strong><small>India · Sacred heritage</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
+    <a class="destination-tile" href="/listings?search=Mysuru"><span class="destination-icon"><i class="fa-solid fa-landmark"></i></span><span><strong>Mysuru</strong><small>India · Palace &amp; culture</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
   </div>
 </section>
 <form class="price-filter" action="/listings" method="GET" id="stay-filters">
@@ -53,7 +57,7 @@
   <div>
     <div class="section-kicker">The collection</div>
     <h2 class="section-title"><%= nearby ? 'Stays near your location' : (typeof search !== 'undefined' && search ? 'Places matching your search' : 'Places worth the detour') %></h2>
-    <p class="section-subtitle"><%= nearby ? `Showing stays within ${radiusKm} km, in order of distance.` : 'Find a place that feels like part of the adventure.' %></p>
+    <p class="section-subtitle"><%= nearby ? 'Showing stays within ' + radiusKm + ' km, in order of distance.' : 'Find a place that feels like part of the adventure.' %></p>
   </div>
   <span class="section-count"><i class="fa-solid fa-compass me-1"></i> <%= allListings.length %> stays</span>
 </div>

@@ -36,7 +36,7 @@
     <a class="destination-tile" href="/listings?search=Mysuru"><span class="destination-icon"><i class="fa-solid fa-landmark"></i></span><span><strong>Mysuru</strong><small>India · Palace &amp; culture</small></span><i class="fa-solid fa-arrow-up-right-from-square destination-arrow"></i></a>
   </div>
 </section>
-<form class="price-filter" action="/listings" method="GET" id="stay-filters">
+<form class="price-filter" action="/listings" method="GET" id="stay-filters" data-search-active="<%= search ? 'true' : 'false' %>">
   <input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
   <input type="hidden" name="lat" id="nearby-lat" value="<%= latitude %>">
   <input type="hidden" name="lng" id="nearby-lng" value="<%= longitude %>">
@@ -73,7 +73,7 @@
 </div>
 
 <% if (allListings.length) { %>
-  <div class="listing-grid">
+  <div class="listing-grid" id="listing-results">
     <% for (let listing of allListings) { %>
       <a href="/listings/<%= listing._id %>" class="listing-link" data-listing-id="<%= listing._id %>">
         <article class="card listing-card">
@@ -125,5 +125,10 @@
         : "Could not get your location. Please try again.";
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
   });
+
+  if (document.getElementById("stay-filters")?.dataset.searchActive === "true") {
+    const firstSearchResult = document.querySelector("#listing-results .listing-link") || document.querySelector(".empty-state");
+    firstSearchResult?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
 </script>

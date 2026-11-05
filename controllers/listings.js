@@ -12,6 +12,20 @@ const categorySearchTerms = {
     outdoors: "outdoor|camp(?:ing)?|trek(?:king)?|hike|nature|forest|wildlife|adventure|national park|Manali|Leh|Goa|Kerala|Rishikesh|Ooty|pine|hillside",
     "hidden-gems": "hidden|offbeat|secluded|boutique|unique|secret|unexplored|lesser-known|cottage|guesthouse|haveli|houseboat|courtyard|bungalow",
 };
+const popularDestinations = [
+    { name: "Agra", terms: ["Agra"], image: "https://images.unsplash.com/photo-1523979934836-981ca2ded72f?auto=format&fit=crop&w=900&q=80" },
+    { name: "Varanasi", terms: ["Varanasi"], image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=900&q=80" },
+    { name: "Jaipur", terms: ["Jaipur"], image: "https://images.unsplash.com/photo-1706961121783-4ae6c933983a?auto=format&fit=crop&w=900&q=80" },
+    { name: "Goa", terms: ["Goa"], image: "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&fit=crop&w=900&q=80" },
+    { name: "Delhi", terms: ["Delhi"], image: "https://images.unsplash.com/photo-1609258678760-ba05d9b95bb9?auto=format&fit=crop&w=900&q=80" },
+    { name: "Kerala", terms: ["Kerala", "Alleppey", "Alappuzha", "Munnar", "Kochi"], image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=900&q=80" },
+    { name: "Udaipur", terms: ["Udaipur"], image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=900&q=80" },
+    { name: "Manali", terms: ["Manali"], image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=900&q=80" },
+    { name: "Mumbai", terms: ["Mumbai"], image: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=900&q=80" },
+    { name: "Amritsar", terms: ["Amritsar"], image: "https://images.unsplash.com/photo-1676490081752-2cd8404a8609?auto=format&fit=crop&w=900&q=80" },
+    { name: "Ayodhya", terms: ["Ayodhya"], image: "https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&fit=crop&w=900&q=80" },
+    { name: "Mysuru", terms: ["Mysuru", "Mysore"], image: "https://images.unsplash.com/photo-1600100397608-f0107a1b8993?auto=format&fit=crop&w=900&q=80" },
+];
 
 
 module.exports.index = async (req, res) => {
@@ -98,8 +112,27 @@ module.exports.index = async (req, res) => {
     if (category === "trending") {
         allListings.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
     }
+
+    const destinationTerms = popularDestinations.flatMap((destination) => destination.terms);
+    const destinationPattern = destinationTerms.join("|");
+    const destinationListings = await Listing.find({
+        country: /^India$/i,
+        $or: [
+            { title: { $regex: destinationPattern, $options: "i" } },
+            { location: { $regex: destinationPattern, $options: "i" } },
+        ],
+    }).sort({ price: 1 }).limit(300);
+    const featuredDestinations = popularDestinations.map((destination) => {
+        const termsPattern = new RegExp(destination.terms.join("|"), "i");
+        const listing = destinationListings.find((candidate) =>
+            termsPattern.test(`${candidate.title || ""} ${candidate.location || ""}`)
+        );
+        return { ...destination, listing };
+    });
+
     res.render("listings/index.ejs", {
         allListings,
+        featuredDestinations,
         search,
         category,
         minPrice: req.query.minPrice || "",

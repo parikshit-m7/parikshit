@@ -63,19 +63,28 @@
   <span class="section-count"><i class="fa-solid fa-compass me-1"></i> <%= allListings.length %> stays</span>
 </div>
 
-<div class="destination-photo-grid" aria-label="Popular destinations in India">
-  <a class="destination-photo-card" href="/listings?search=Agra"><img src="https://images.unsplash.com/photo-1523979934836-981ca2ded72f?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Taj Mahal in Agra" loading="lazy"><div class="destination-photo-copy"><strong>Agra</strong><span>Taj Mahal &amp; heritage</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Varanasi"><img src="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Varanasi ghats" loading="lazy"><div class="destination-photo-copy"><strong>Varanasi</strong><span>Ghats &amp; culture</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Jaipur"><img src="https://images.unsplash.com/photo-1706961121783-4ae6c933983a?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Hawa Mahal in Jaipur" loading="lazy"><div class="destination-photo-copy"><strong>Jaipur</strong><span>Heritage &amp; palaces</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Goa"><img src="https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Beach in Goa" loading="lazy"><div class="destination-photo-copy"><strong>Goa</strong><span>Beaches &amp; escapes</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Delhi"><img src="https://images.unsplash.com/photo-1609258678760-ba05d9b95bb9?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="India Gate in Delhi" loading="lazy"><div class="destination-photo-copy"><strong>Delhi</strong><span>History &amp; city life</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Kerala"><img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Kerala backwaters" loading="lazy"><div class="destination-photo-copy"><strong>Kerala</strong><span>Backwaters &amp; greenery</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Udaipur"><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Lake and hills near Udaipur" loading="lazy"><div class="destination-photo-copy"><strong>Udaipur</strong><span>Lakeside stays</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Manali"><img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Mountain landscape near Manali" loading="lazy"><div class="destination-photo-copy"><strong>Manali</strong><span>Mountain air</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Mumbai"><img src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Mumbai city by the sea" loading="lazy"><div class="destination-photo-copy"><strong>Mumbai</strong><span>City by the sea</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Amritsar"><img src="https://images.unsplash.com/photo-1676490081752-2cd8404a8609?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Golden Temple in Amritsar" loading="lazy"><div class="destination-photo-copy"><strong>Amritsar</strong><span>Golden Temple</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Ayodhya"><img src="https://images.unsplash.com/photo-1606293926075-69a00dbfde81?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Temple architecture in India" loading="lazy"><div class="destination-photo-copy"><strong>Ayodhya</strong><span>Sacred heritage</span></div></a>
-  <a class="destination-photo-card" href="/listings?search=Mysuru"><img src="https://images.unsplash.com/photo-1600100397608-f0107a1b8993?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="Mysore Palace" loading="lazy"><div class="destination-photo-copy"><strong>Mysuru</strong><span>Palace &amp; culture</span></div></a>
+<div class="listing-grid destination-listing-grid" aria-label="Popular Indian stays">
+  <% for (const destination of featuredDestinations) { const stay = destination.listing; %>
+    <a class="listing-link" href="<%= stay ? `/listings/${stay._id}` : `/listings?search=${encodeURIComponent(destination.name)}` %>">
+      <article class="card listing-card">
+        <div class="listing-image-wrap">
+          <img src="<%= stay?.image?.url || destination.image %>" class="card-img-top" alt="<%= stay ? stay.title : `${destination.name} destination` %>" loading="lazy">
+          <span class="listing-badge"><i class="fa-solid fa-leaf me-1"></i> Worth discovering</span>
+          <% if (stay) { %>
+            <button class="listing-heart" type="button" data-favorite-id="<%= stay._id %>" aria-label="Save <%= stay.title %>" aria-pressed="false" title="Save this stay"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <div class="listing-title-row">
+            <span class="listing-title"><%= stay ? stay.title : `${destination.name} stays` %></span>
+            <span class="listing-rating"><i class="fa-solid fa-star"></i> <%= stay ? 'New' : 'Explore' %></span>
+          </div>
+          <p class="card-text"><i class="fa-solid fa-location-dot me-1"></i><%= stay ? stay.location : destination.name %><%= stay?.country ? ', ' + stay.country : ', India' %></p>
+          <div class="listing-price"><%= stay ? `₹ ${stay.price ? stay.price.toLocaleString("en-IN") : "Price on request"}` : 'No stay listed yet' %> <span><%= stay ? '/ night' : '· Explore this place' %></span></div>
+        </div>
+      </article>
+    </a>
+  <% } %>
 </div>
 
 <% if (search) { %>

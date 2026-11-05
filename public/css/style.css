@@ -471,3 +471,9 @@ img, video, canvas, svg { max-width: 100%; }
 .status-cancelled,.status-rejected { background:#fce9e8; color:#873c38; }
 .nearby-attribution { margin-top:10px; color:#77807b; font-size:.72rem; }
 @media(max-width:600px){.booking-card{grid-template-columns:76px minmax(0,1fr) 18px;gap:10px}.booking-card>img{width:76px;height:86px}}
+/* Password recovery panels follow the saved site theme. */
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}

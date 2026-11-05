@@ -38,6 +38,7 @@
 </section>
 <form class="price-filter" action="/listings" method="GET" id="stay-filters" data-search-active="<%= search ? 'true' : 'false' %>">
   <input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
+  <input type="hidden" name="category" id="stay-category" value="<%= category || '' %>">
   <input type="hidden" name="lat" id="nearby-lat" value="<%= latitude %>">
   <input type="hidden" name="lng" id="nearby-lng" value="<%= longitude %>">
   <label for="nearby-radius">Nearby</label>
@@ -57,20 +58,22 @@
   <div>
     <div class="section-kicker">The collection</div>
     <h2 class="section-title"><%= nearby ? 'Stays near your location' : (typeof search !== 'undefined' && search ? 'Places matching your search' : 'Places worth the detour') %></h2>
-    <p class="section-subtitle"><%= nearby ? 'Showing stays within ' + radiusKm + ' km, in order of distance.' : 'Find a place that feels like part of the adventure.' %></p>
+    <p class="section-subtitle"><%= nearby ? `Showing stays within ${radiusKm} km, in order of distance.` : 'Find a place that feels like part of the adventure.' %></p>
   </div>
   <span class="section-count"><i class="fa-solid fa-compass me-1"></i> <%= allListings.length %> stays</span>
 </div>
 
-<div id="filters" aria-label="Stay categories">
-  <div class="filter"><i class="fa-solid fa-fire"></i><p>Trending</p></div>
-  <div class="filter"><i class="fa-solid fa-bed"></i><p>Slow stays</p></div>
-  <div class="filter"><i class="fa-solid fa-city"></i><p>City breaks</p></div>
-  <div class="filter"><i class="fa-solid fa-mountain-sun"></i><p>Mountains</p></div>
-  <div class="filter"><i class="fa-solid fa-water"></i><p>By the water</p></div>
-  <div class="filter"><i class="fa-solid fa-campground"></i><p>Outdoors</p></div>
-  <div class="filter"><i class="fa-solid fa-house-chimney-window"></i><p>Hidden gems</p></div>
-</div>
+<% if (search) { %>
+  <div id="filters" aria-label="Filter stays in <%= search %> by category">
+    <button type="button" class="filter <%= category === 'trending' ? 'active' : '' %>" data-stay-category="trending" aria-pressed="<%= category === 'trending' %>"><i class="fa-solid fa-fire"></i><span>Trending</span></button>
+    <button type="button" class="filter <%= category === 'slow-stays' ? 'active' : '' %>" data-stay-category="slow-stays" aria-pressed="<%= category === 'slow-stays' %>"><i class="fa-solid fa-bed"></i><span>Slow stays</span></button>
+    <button type="button" class="filter <%= category === 'city-breaks' ? 'active' : '' %>" data-stay-category="city-breaks" aria-pressed="<%= category === 'city-breaks' %>"><i class="fa-solid fa-city"></i><span>City breaks</span></button>
+    <button type="button" class="filter <%= category === 'mountains' ? 'active' : '' %>" data-stay-category="mountains" aria-pressed="<%= category === 'mountains' %>"><i class="fa-solid fa-mountain-sun"></i><span>Mountains</span></button>
+    <button type="button" class="filter <%= category === 'by-water' ? 'active' : '' %>" data-stay-category="by-water" aria-pressed="<%= category === 'by-water' %>"><i class="fa-solid fa-water"></i><span>By the water</span></button>
+    <button type="button" class="filter <%= category === 'outdoors' ? 'active' : '' %>" data-stay-category="outdoors" aria-pressed="<%= category === 'outdoors' %>"><i class="fa-solid fa-campground"></i><span>Outdoors</span></button>
+    <button type="button" class="filter <%= category === 'hidden-gems' ? 'active' : '' %>" data-stay-category="hidden-gems" aria-pressed="<%= category === 'hidden-gems' %>"><i class="fa-solid fa-house-chimney-window"></i><span>Hidden gems</span></button>
+  </div>
+<% } %>
 
 <% if (allListings.length) { %>
   <div class="listing-grid" id="listing-results">
@@ -124,6 +127,13 @@
         ? "Allow location access in your browser to find nearby stays."
         : "Could not get your location. Please try again.";
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
+
+  document.querySelectorAll("[data-stay-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.getElementById("stay-category").value = button.dataset.stayCategory;
+      document.getElementById("stay-filters").requestSubmit();
+    });
   });
 
   if (document.getElementById("stay-filters")?.dataset.searchActive === "true") {

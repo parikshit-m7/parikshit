@@ -168,6 +168,12 @@ html[data-theme="dark"] .booking-card .text-muted { color: #c4cada !important; }
 html[data-theme="dark"] .nearby-place-card .nearby-distance { color: #d9dcff !important; }
 html[data-theme="dark"] ::selection { background: #d9dcff; color: #171925; }
 
+html[data-theme="dark"] .filter.active {
+  background: #2b2d49 !important;
+  border-color: #686bb9 !important;
+  color: #d9dcff !important;
+}
+
 /* Contrast fixes: listing cards intentionally remain white in dark mode.
    Keep their text dark so titles, locations, ratings and prices stay readable. */
 html[data-theme="dark"] .listing-card .card-body { color: #20252f !important; }

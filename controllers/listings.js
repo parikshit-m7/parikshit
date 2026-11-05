@@ -8,8 +8,11 @@ const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : nul
 
 module.exports.index = async (req, res) => {
     const { mongoFilter, search } = buildListingSearch(req.query.search);
+    const categoryOptions = ["trending", "slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems"];
+    const category = categoryOptions.includes(req.query.category) ? req.query.category : "";
     // Wanderlust is focused on stays in India, including nearby and price searches.
     const filter = { ...mongoFilter, country: /^India$/i };
+    if (category && category !== "trending") filter.categories = category;
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);
 
@@ -73,9 +76,13 @@ module.exports.index = async (req, res) => {
     const listingsQuery = Listing.find(filter).limit(100);
     if (!hasLocation) listingsQuery.sort({ _id: -1 });
     const allListings = await listingsQuery;
+    if (category === "trending") {
+        allListings.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
+    }
     res.render("listings/index.ejs", {
         allListings,
         search,
+        category,
         minPrice: req.query.minPrice || "",
         maxPrice: req.query.maxPrice || "",
         nearby: hasLocation,
@@ -236,6 +243,7 @@ module.exports.updateListing = async (req, res) => {
   }
 
   Object.assign(listing, req.body.listing);
+  listing.categories = req.body.listing.categories || [];
 
   // Keep the existing photo unless a new one was uploaded.
   if (req.file) {

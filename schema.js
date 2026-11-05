@@ -8,6 +8,7 @@ module.exports.listingSchema = Joi.object({
         country : Joi.string().required(),
         price : Joi.number().required().min(0),
         rooms : Joi.number().integer().min(1).max(99).default(1),
+        categories : Joi.array().items(Joi.string().valid("slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems")).default([]),
         image:  Joi.string().allow("",null)
     }).required(),
 });

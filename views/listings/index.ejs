@@ -60,31 +60,7 @@
     <h2 class="section-title"><%= nearby ? 'Stays near your location' : (typeof search !== 'undefined' && search ? 'Places matching your search' : 'Places worth the detour') %></h2>
     <p class="section-subtitle"><%= nearby ? `Showing stays within ${radiusKm} km, in order of distance.` : 'Find a place that feels like part of the adventure.' %></p>
   </div>
-  <span class="section-count"><i class="fa-solid fa-compass me-1"></i> <%= allListings.length %> stays</span>
-</div>
-
-<div class="listing-grid destination-listing-grid" aria-label="Popular Indian stays">
-  <% for (const destination of featuredDestinations) { const stay = destination.listing; %>
-    <a class="listing-link" href="<%= stay ? `/listings/${stay._id}` : `/listings?search=${encodeURIComponent(destination.name)}` %>">
-      <article class="card listing-card">
-        <div class="listing-image-wrap">
-          <img src="<%= stay?.image?.url || destination.image %>" class="card-img-top" alt="<%= stay ? stay.title : `${destination.name} destination` %>" loading="lazy">
-          <span class="listing-badge"><i class="fa-solid fa-leaf me-1"></i> Worth discovering</span>
-          <% if (stay) { %>
-            <button class="listing-heart" type="button" data-favorite-id="<%= stay._id %>" aria-label="Save <%= stay.title %>" aria-pressed="false" title="Save this stay"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
-          <% } %>
-        </div>
-        <div class="card-body">
-          <div class="listing-title-row">
-            <span class="listing-title"><%= stay ? stay.title : `${destination.name} stays` %></span>
-            <span class="listing-rating"><i class="fa-solid fa-star"></i> <%= stay ? 'New' : 'Explore' %></span>
-          </div>
-          <p class="card-text"><i class="fa-solid fa-location-dot me-1"></i><%= stay ? stay.location : destination.name %><%= stay?.country ? ', ' + stay.country : ', India' %></p>
-          <div class="listing-price"><%= stay ? `₹ ${stay.price ? stay.price.toLocaleString("en-IN") : "Price on request"}` : 'No stay listed yet' %> <span><%= stay ? '/ night' : '· Explore this place' %></span></div>
-        </div>
-      </article>
-    </a>
-  <% } %>
+  <span class="section-count"><i class="fa-solid fa-compass me-1"></i> <%= displayListings.length %> stays</span>
 </div>
 
 <% if (search) { %>
@@ -99,9 +75,9 @@
   </div>
 <% } %>
 
-<% if (allListings.length) { %>
+<% if (displayListings.length) { %>
   <div class="listing-grid" id="listing-results">
-    <% for (let listing of allListings) { %>
+    <% for (let listing of displayListings) { %>
       <a href="/listings/<%= listing._id %>" class="listing-link" data-listing-id="<%= listing._id %>">
         <article class="card listing-card">
           <div class="listing-image-wrap">

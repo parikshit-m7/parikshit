@@ -477,3 +477,19 @@ html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[styl
   color: var(--ink) !important;
   border-color: var(--line) !important;
 }
+/* Dark theme colors for the three account recovery actions. */
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary {
+  background: #315640 !important;
+  border-color: #315640 !important;
+  color: #fff !important;
+  transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+}
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary:hover {
+  background: #3c6c4f !important;
+  border-color: #3c6c4f !important;
+  color: #fff !important;
+}
+html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] .hero-btn-primary:focus-visible {
+  outline: 3px solid #a6cfb3;
+  outline-offset: 3px;
+}

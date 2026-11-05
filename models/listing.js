@@ -22,6 +22,7 @@ const listingSchema = new Schema({
     country: String,
     demoKey: { type: String, unique: true, sparse: true },
     isDemo: { type: Boolean, default: false },
+    isArchived: { type: Boolean, default: false },
     categories: {
         type: [{
             type: String,

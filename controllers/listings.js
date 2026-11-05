@@ -33,7 +33,7 @@ module.exports.index = async (req, res) => {
     const categoryOptions = ["trending", "slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems"];
     const category = categoryOptions.includes(req.query.category) ? req.query.category : "";
     // Wanderlust is focused on stays in India, including nearby and price searches.
-    const filter = { ...mongoFilter, country: /^India$/i };
+    const filter = { ...mongoFilter, country: /^India$/i, isArchived: { $ne: true } };
     if (category && category !== "trending") {
         const categoryPattern = new RegExp(categorySearchTerms[category], "i");
         const categoryMatches = [
@@ -117,6 +117,7 @@ module.exports.index = async (req, res) => {
     const destinationPattern = destinationTerms.join("|");
     const destinationListings = await Listing.find({
         country: /^India$/i,
+        isArchived: { $ne: true },
         $or: [
             { title: { $regex: destinationPattern, $options: "i" } },
             { location: { $regex: destinationPattern, $options: "i" } },

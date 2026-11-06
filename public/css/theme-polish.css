@@ -227,6 +227,9 @@ html[data-theme="dark"] .nearby-tab.active {
   border-color: #a9b8ff !important;
   color: #191a2b !important;
 }
+html[data-theme="dark"] .form-text {
+  color: #b8c0d2 !important;
+}
 html[data-theme="dark"] #book-now-button:disabled {
   background: #454967 !important;
   border-color: #555a7a !important;

@@ -197,6 +197,44 @@ html[data-theme="dark"] .tax-toggle .form-check-input:checked { background-color
 html[data-theme="dark"] .navbar-toggler { border: 1px solid #454b5d !important; }
 html[data-theme="dark"] .listing-grid { border-color: #303646; }
 
+/* Keep secondary actions and nearby filters readable in dark mode. */
+html[data-theme="dark"] .hero-btn-primary {
+  background: #d4d2ff !important;
+  border: 1px solid #e3e1ff !important;
+  color: #191a2b !important;
+  text-shadow: none !important;
+}
+html[data-theme="dark"] .hero-btn-primary i { color: #191a2b !important; }
+html[data-theme="dark"] .hero-btn-primary:hover,
+html[data-theme="dark"] .hero-btn-primary:focus-visible {
+  background: #e3e1ff !important;
+  border-color: #f0efff !important;
+  color: #191a2b !important;
+}
+html[data-theme="dark"] .nearby-tab {
+  background: #292d3e !important;
+  border-color: #454b68 !important;
+  color: #e6e8f5 !important;
+}
+html[data-theme="dark"] .nearby-tab:hover,
+html[data-theme="dark"] .nearby-tab:focus-visible {
+  background: #363a52 !important;
+  border-color: #777dc0 !important;
+  color: #fff !important;
+}
+html[data-theme="dark"] .nearby-tab.active {
+  background: #a9b8ff !important;
+  border-color: #a9b8ff !important;
+  color: #191a2b !important;
+}
+html[data-theme="dark"] #book-now-button:disabled {
+  background: #454967 !important;
+  border-color: #555a7a !important;
+  color: #e4e5f1 !important;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 /* Final listing-card dark surface fix: remove the white blocks beneath photos. */
 html[data-theme="dark"] .listing-card .card-body,
 html[data-theme="dark"] .listing-card .listing-image-wrap + .card-body {

@@ -21,6 +21,13 @@ const listingSchema = new Schema({
     location: String,
     country: String,
     demoKey: { type: String, unique: true, sparse: true },
+    matrixKey: { type: String, unique: true, sparse: true },
+    destinationKey: { type: String, index: true },
+    browseCategory: {
+        type: String,
+        enum: ["trending", "slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems"],
+    },
+    isMatrixStay: { type: Boolean, default: false, index: true },
     isDemo: { type: Boolean, default: false },
     isArchived: { type: Boolean, default: false },
     categories: {

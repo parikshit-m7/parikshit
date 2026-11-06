@@ -1,17 +1,10 @@
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 const { buildListingSearch } = require("../utils/listingSearch");
+const matrixDestinations = require("../utils/ensureDemoListings").destinations;
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
 const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : null;
-const categoryPlaceTerms = {
-    "slow-stays": "Kerala|Alleppey|Alappuzha|Munnar|Ooty|Udaipur|Rishikesh",
-    "city-breaks": "Mumbai|Delhi|Jaipur|Agra|Amritsar|Ayodhya|Mysuru|Mysore|Varanasi|Goa|Bengaluru|Pune",
-    mountains: "Manali|Leh|Ladakh|Shimla|Mussoorie|Nainital|Darjeeling|Ooty|Srinagar",
-    "by-water": "Goa|Mumbai|Kerala|Alleppey|Alappuzha|Kochi|Udaipur|Varanasi|Rishikesh",
-    outdoors: "Manali|Leh|Ladakh|Goa|Kerala|Rishikesh|Ooty|Munnar|Wayanad|Corbett",
-    "hidden-gems": "offbeat|hidden gem|secluded|secret|unexplored|lesser-known",
-};
 const popularDestinations = [
     { name: "Agra", terms: ["Agra"], image: "https://images.unsplash.com/photo-1523979934836-981ca2ded72f?auto=format&fit=crop&w=900&q=80" },
     { name: "Varanasi", terms: ["Varanasi"], image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=900&q=80" },
@@ -32,20 +25,20 @@ module.exports.index = async (req, res) => {
     const { mongoFilter, search } = buildListingSearch(req.query.search);
     const categoryOptions = ["trending", "slow-stays", "city-breaks", "mountains", "by-water", "outdoors", "hidden-gems"];
     const category = categoryOptions.includes(req.query.category) ? req.query.category : "";
+    const normalizedSearch = String(req.query.search || "").trim().toLowerCase();
+    const requestedDestination = matrixDestinations.find((destination) =>
+        destination.key === req.query.destination ||
+        destination.aliases.some((alias) => alias.toLowerCase() === normalizedSearch)
+    );
     // Wanderlust is focused on stays in India, including nearby and price searches.
-    const filter = { ...mongoFilter, country: /^India$/i, isArchived: { $ne: true } };
-    if (category && category !== "trending") {
-        const categoryMatches = [{ categories: category }];
-        if (categoryPlaceTerms[category] && category !== "hidden-gems") {
-            const categoryPattern = new RegExp(categoryPlaceTerms[category], "i");
-            categoryMatches.push(...["title", "location"].map((field) => ({ [field]: categoryPattern })));
-        }
-        filter.$and = [
-            ...(filter.$and || []),
-            { $or: categoryMatches },
-        ];
-        if (category === "hidden-gems") filter.reviews = { $size: 0 };
-    }
+    const filter = {
+        ...(requestedDestination ? {} : mongoFilter),
+        country: /^India$/i,
+        isArchived: { $ne: true },
+        isMatrixStay: true,
+    };
+    if (requestedDestination) filter.destinationKey = requestedDestination.key;
+    if (category) filter.browseCategory = category;
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);
 
@@ -113,24 +106,18 @@ module.exports.index = async (req, res) => {
         allListings.sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
     }
 
-    const destinationTerms = popularDestinations.flatMap((destination) => destination.terms);
-    const destinationPattern = destinationTerms.join("|");
     const destinationListings = await Listing.find({
         country: /^India$/i,
         isArchived: { $ne: true },
-        $or: [
-            { title: { $regex: destinationPattern, $options: "i" } },
-            { location: { $regex: destinationPattern, $options: "i" } },
-        ],
-    }).sort({ price: 1 }).limit(300);
+        isMatrixStay: true,
+        browseCategory: "trending",
+    }).sort({ price: 1 });
     const featuredDestinations = popularDestinations.map((destination) => {
-        const termsPattern = new RegExp(destination.terms.join("|"), "i");
-        const listing = destinationListings.find((candidate) =>
-            termsPattern.test(`${candidate.title || ""} ${candidate.location || ""}`)
-        );
+        const destinationKey = matrixDestinations.find((item) => item.name === destination.name)?.key;
+        const listing = destinationListings.find((candidate) => candidate.destinationKey === destinationKey);
         return { ...destination, listing };
     });
-    const showUnfilteredFeatured = !search && !category && !hasLocation &&
+    const showUnfilteredFeatured = !requestedDestination && !search && !category && !hasLocation &&
         !req.query.minPrice && !req.query.maxPrice;
     const displayListings = showUnfilteredFeatured
         ? [...new Map([...allListings, ...featuredDestinations.map((destination) => destination.listing).filter(Boolean)]
@@ -141,7 +128,8 @@ module.exports.index = async (req, res) => {
         allListings,
         displayListings,
         featuredDestinations,
-        search,
+        search: requestedDestination?.name || search,
+        destinationKey: requestedDestination?.key || "",
         category,
         minPrice: req.query.minPrice || "",
         maxPrice: req.query.maxPrice || "",

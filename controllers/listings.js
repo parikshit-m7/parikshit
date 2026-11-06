@@ -4,13 +4,13 @@ const { buildListingSearch } = require("../utils/listingSearch");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
 const mapToken = process.env.MAP_TOKEN;
 const geocodingClient = mapToken ? mbxGeocoding({ accessToken: mapToken }) : null;
-const categorySearchTerms = {
-    "slow-stays": "slow|relax(?:ed|ing)?|peaceful|quiet|retreat|wellness|spa|long stay|serene|calm",
-    "city-breaks": "city|urban|metro|Mumbai|Delhi|Jaipur|Agra|Amritsar|Ayodhya|Mysuru|Varanasi|Goa",
-    mountains: "mountain|hill|Himalaya|Manali|Leh|Ladakh|Shimla|Mussoorie|Nainital|Darjeeling|Ooty",
-    "by-water": "beach|coast|coastal|river|lake|backwater|waterfront|sea|Goa|Mumbai|Kerala|Udaipur|Varanasi|Rishikesh|Alleppey|Alappuzha",
-    outdoors: "outdoor|camp(?:ing)?|trek(?:king)?|hike|nature|forest|wildlife|adventure|national park|Manali|Leh|Goa|Kerala|Rishikesh|Ooty|pine|hillside",
-    "hidden-gems": "hidden|offbeat|secluded|boutique|unique|secret|unexplored|lesser-known|cottage|guesthouse|haveli|houseboat|courtyard|bungalow",
+const categoryPlaceTerms = {
+    "slow-stays": "Kerala|Alleppey|Alappuzha|Munnar|Ooty|Udaipur|Rishikesh",
+    "city-breaks": "Mumbai|Delhi|Jaipur|Agra|Amritsar|Ayodhya|Mysuru|Mysore|Varanasi|Goa|Bengaluru|Pune",
+    mountains: "Manali|Leh|Ladakh|Shimla|Mussoorie|Nainital|Darjeeling|Ooty|Srinagar",
+    "by-water": "Goa|Mumbai|Kerala|Alleppey|Alappuzha|Kochi|Udaipur|Varanasi|Rishikesh",
+    outdoors: "Manali|Leh|Ladakh|Goa|Kerala|Rishikesh|Ooty|Munnar|Wayanad|Corbett",
+    "hidden-gems": "offbeat|hidden gem|secluded|secret|unexplored|lesser-known",
 };
 const popularDestinations = [
     { name: "Agra", terms: ["Agra"], image: "https://images.unsplash.com/photo-1523979934836-981ca2ded72f?auto=format&fit=crop&w=900&q=80" },
@@ -35,16 +35,16 @@ module.exports.index = async (req, res) => {
     // Wanderlust is focused on stays in India, including nearby and price searches.
     const filter = { ...mongoFilter, country: /^India$/i, isArchived: { $ne: true } };
     if (category && category !== "trending") {
-        const categoryPattern = new RegExp(categorySearchTerms[category], "i");
-        const categoryMatches = [
-            { categories: category },
-            ...["title", "description", "location"].map((field) => ({ [field]: categoryPattern })),
-        ];
-        if (category === "hidden-gems") categoryMatches.push({ reviews: { $size: 0 } });
+        const categoryMatches = [{ categories: category }];
+        if (categoryPlaceTerms[category] && category !== "hidden-gems") {
+            const categoryPattern = new RegExp(categoryPlaceTerms[category], "i");
+            categoryMatches.push(...["title", "location"].map((field) => ({ [field]: categoryPattern })));
+        }
         filter.$and = [
             ...(filter.$and || []),
             { $or: categoryMatches },
         ];
+        if (category === "hidden-gems") filter.reviews = { $size: 0 };
     }
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);

@@ -79,7 +79,6 @@
         <div class="mb-3 col-md-4">
           <label for="rooms" class="form-label">Rooms available</label>
           <input id="rooms" name="listing[rooms]" type="number" class="form-control" min="1" max="99" value="<%= listing.rooms || 1 %>" required>
-          <div class="form-text">Guests can book up to this many rooms for the same dates.</div>
         </div>
 
 
@@ -129,7 +128,6 @@
           <option value="Ayodhya, Uttar Pradesh"></option>
           <option value="Mysuru, Karnataka"></option>
         </datalist>
-        <div class="form-text">Choose one of these popular Indian places, or type the full location of your stay.</div>
         <div class="invalid-feedback">
           Location should be valid.
         </div>
@@ -137,7 +135,6 @@
 
       <fieldset class="mb-3">
         <legend class="form-label">Stay categories</legend>
-        <div class="form-text mb-2">Select the categories that describe your stay.</div>
         <div class="d-flex flex-wrap gap-3">
           <label><input type="checkbox" name="listing[categories][]" value="slow-stays" <%= listing.categories?.includes("slow-stays") ? "checked" : "" %>> Slow stays</label>
           <label><input type="checkbox" name="listing[categories][]" value="city-breaks" <%= listing.categories?.includes("city-breaks") ? "checked" : "" %>> City breaks</label>

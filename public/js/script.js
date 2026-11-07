@@ -150,4 +150,17 @@
     input.addEventListener('input', updateHint)
     updateHint()
   })
+
+  document.querySelectorAll('[data-auto-dismiss]').forEach(toast => {
+    let timer
+    const dismiss = () => {
+      if (!toast.isConnected || toast.classList.contains('is-leaving')) return
+      window.clearTimeout(timer)
+      toast.classList.add('is-leaving')
+      window.setTimeout(() => toast.remove(), 220)
+    }
+
+    toast.querySelector('[data-flash-close]')?.addEventListener('click', dismiss)
+    timer = window.setTimeout(dismiss, Number(toast.dataset.autoDismiss) || 4800)
+  })
 })();

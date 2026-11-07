@@ -242,7 +242,7 @@ a { color: inherit; }
 .navbar-actions { gap:12px !important; }
 .navbar-actions > .nav-link { margin-right:10px; }
 .navbar-actions .account-menu { margin-left:2px; }
-.account-dropdown { width:300px; max-height:min(78vh,680px); overflow-y:auto; margin-top:10px !important; padding:12px; border:1px solid var(--line); border-radius:18px; background:var(--card); color:var(--ink); box-shadow:0 18px 50px rgba(0,0,0,.18); }
+.account-dropdown { width:300px; max-height:min(78vh,680px); overflow-y:auto; margin-top:10px !important; padding:12px; border:1px solid var(--line) !important; border-radius:18px; background:var(--card) !important; color:var(--ink) !important; box-shadow:0 18px 50px rgba(0,0,0,.18); }
 .account-dropdown-heading { display:flex; flex-direction:column; gap:3px; padding:7px 10px 12px; }
 .account-dropdown-heading strong { color:var(--ink); font-size:.92rem; }
 .account-dropdown-heading span { color:var(--muted); font-size:.72rem; }

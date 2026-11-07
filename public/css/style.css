@@ -137,10 +137,10 @@ a { color: inherit; }
 .detail-gallery-multiple .show-img:first-child { grid-row:span 2; }
 .gallery-sample-label { position:absolute; right:12px; bottom:12px; padding:6px 10px; border-radius:999px; background:rgba(18,20,27,.82); color:#fff; font-size:.75rem; font-weight:700; }
 .detail-panel { max-width:880px; margin:26px auto 55px; }
-.detail-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(280px,1fr); grid-template-areas:"main booking" "reviews booking"; gap:0 24px; align-items:start; }
-.detail-main-column { grid-area:main; min-width:0; }
-.booking-column { grid-area:booking; min-width:0; }
-.detail-layout > .detail-main-card { grid-area:reviews; min-width:0; padding-top:14px; }
+.detail-layout { position:relative; display:flow-root; }
+.detail-main-column { width:calc((100% - 24px)*2/3); min-width:0; }
+.booking-column { position:absolute; top:0; right:0; width:calc((100% - 24px)/3); min-width:0; }
+.detail-layout > .detail-main-card { width:calc((100% - 24px)*2/3); min-width:0; padding-top:14px; }
 .detail-main-column > .detail-main-card:last-child { padding-bottom:12px; }
 .detail-main-card { padding:26px 0; border-bottom:1px solid var(--line); }
 .detail-main-card .card-body { padding:0 !important; }
@@ -598,7 +598,7 @@ img, video, canvas, svg { max-width: 100%; }
 .status-cancelled,.status-rejected { background:#fce9e8; color:#873c38; }
 .nearby-attribution { margin-top:10px; color:#77807b; font-size:.72rem; }
 @media(max-width:600px){.booking-card{grid-template-columns:76px minmax(0,1fr) 18px;gap:10px}.booking-card>img{width:76px;height:86px}}
-@media(max-width:991px){.detail-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"main" "booking" "reviews";gap:0}.booking-column{margin-top:22px}}
+@media(max-width:991px){.detail-main-column,.detail-layout > .detail-main-card{width:100%}.booking-column{position:static;width:100%;margin-top:22px}}
 /* Password recovery panels follow the saved site theme. */
 html[data-theme="dark"] .row.justify-content-center > [class*="col-"] > div[style*="background:#fff"] {
   background: var(--card) !important;

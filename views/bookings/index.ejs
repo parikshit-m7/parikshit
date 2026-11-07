@@ -16,10 +16,10 @@
             <% if (booking.guestPhone) { %><p class="booking-guest-detail"><i class="fa-solid fa-phone"></i> Contact: <%= booking.guestPhone %></p><% } %>
             <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
             <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
-            <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status === 'cancelled' ? 'Cancelled' : booking.status %></span><% } %>
+            <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status === 'cancellation_requested' ? 'Cancellation request sent to host' : booking.status === 'cancelled' ? 'Cancelled' : booking.status %></span><% } %>
             <% if (booking.status === 'confirmed' && booking.checkIn.toISOString().slice(0, 10) > todayISO) { %>
-              <form class="booking-cancel-form" method="POST" action="/bookings/<%= booking._id %>/cancel" onsubmit="return confirm('Cancel this booking? The rooms will become available again.');">
-                <button class="booking-cancel-button" type="submit">Cancel booking</button>
+              <form class="booking-cancel-form" method="POST" action="/bookings/<%= booking._id %>/cancel" onsubmit="return confirm('Send a cancellation request to the host? Your booking stays confirmed until the host responds.');">
+                <button class="booking-cancel-button" type="submit">Request cancellation</button>
               </form>
             <% } %>
           </div>

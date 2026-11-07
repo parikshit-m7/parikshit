@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const bookingSchema = new mongoose.Schema({
   listing: { type: mongoose.Schema.Types.ObjectId, ref: "Listing", required: true, index: true },
   bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+  guestPhone: { type: String, trim: true, required: true },
+  aadhaarLast4: { type: String, trim: true, match: /^\d{4}$/ },
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },
   guests: { type: Number, required: true, min: 1, max: 10 },

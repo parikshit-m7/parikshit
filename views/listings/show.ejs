@@ -80,6 +80,20 @@
           <label for="room-count">Rooms <span class="text-muted">(<%= Math.max(1, Number(listing.rooms) || 1) %> available in this stay)</span></label>
           <select id="room-count" name="rooms"><% for (let count = 1; count <= Math.max(1, Number(listing.rooms) || 1); count++) { %><option value="<%= count %>"><%= count %> <%= count === 1 ? 'room' : 'rooms' %></option><% } %></select>
           <label for="guest-count">Guests</label><select id="guest-count" name="guests"><% for (let count = 1; count <= 10; count++) { %><option value="<%= count %>"><%= count %> <%= count === 1 ? 'guest' : 'guests' %></option><% } %></select>
+          <div class="booking-contact-field">
+            <label for="booking-phone">Mobile number</label>
+            <input type="tel" id="booking-phone" name="guestPhone" value="<%= currUser?.phone || '' %>" autocomplete="tel" inputmode="tel" maxlength="20" pattern="[+0-9(). -]{8,20}" placeholder="e.g. +91 98765 43210" required>
+            <p class="booking-contact-help">The stay host can use this number to coordinate your booking.</p>
+          </div>
+          <div class="booking-contact-field">
+            <label for="aadhaar-last4">Aadhaar last 4 digits <span class="text-muted">(optional)</span></label>
+            <input type="text" id="aadhaar-last4" name="aadhaarLast4" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]{4}" placeholder="Last 4 digits only">
+            <p class="booking-contact-help">Optional reference only. Never enter your full Aadhaar number; this does not verify your identity.</p>
+          </div>
+          <label class="booking-consent" for="booking-contact-consent">
+            <input type="checkbox" id="booking-contact-consent" name="bookingContactConsent" value="yes" required>
+            <span>I agree to share my mobile number and, if entered, the last 4 ID digits with this stay's host for this booking.</span>
+          </label>
           <p id="booking-availability" class="small text-muted mb-0" role="status">Choose dates to check rooms.</p>
           <div class="booking-total"><span id="booking-nights">Select dates</span><strong id="booking-price">₹ <%= (listing.price || 0).toLocaleString("en-IN") %> / room / night</strong></div>
           <% if (!currUser) { %><a class="hero-btn hero-btn-primary w-100 mt-3" href="/login" style="justify-content:center;text-decoration:none">Log in to book <i class="fa-solid fa-arrow-right"></i></a>

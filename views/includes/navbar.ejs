@@ -12,6 +12,10 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav navbar-discover-nav">
+        <a class="nav-link" href="/listings">Discover stays</a>
+      </div>
+
       <form class="search-form navbar-search" role="search" action="/listings" method="GET">
         <i class="fa-solid fa-magnifying-glass" style="color:#718078"></i>
         <input class="form-control search-inp" type="search" name="search"
@@ -19,10 +23,6 @@
           placeholder="Where do you want to go?" aria-label="Search listings" maxlength="100">
         <button class="btn search-btn" type="submit">Explore <i class="fa-solid fa-arrow-right ms-1"></i></button>
       </form>
-
-      <div class="navbar-nav navbar-discover-nav">
-        <a class="nav-link" href="/listings">Discover stays</a>
-      </div>
 
       <div class="navbar-nav navbar-actions mt-2 mt-xl-0 align-items-xl-center">
         <a class="nav-link" href="/listings/new"><i class="fa-regular fa-compass me-1"></i> Become a host</a>

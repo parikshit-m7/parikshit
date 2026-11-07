@@ -134,6 +134,11 @@
         </div>
       </div>
 
+      <div class="mb-3">
+        <label for="contact-phone" class="form-label">Public contact number <span class="text-muted">(WhatsApp, calls, SMS)</span></label>
+        <input id="contact-phone" name="listing[contactPhone]" value="<%= listing.contactPhone || '' %>" type="tel" class="form-control" placeholder="+91 98765 43210" autocomplete="tel">
+      </div>
+
       <fieldset class="mb-3">
         <legend class="form-label">Stay categories</legend>
         <div class="d-flex flex-wrap gap-3">

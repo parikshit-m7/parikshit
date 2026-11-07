@@ -189,7 +189,11 @@ module.exports.showListing = async (req, res) => {
     const todayISO = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
     }).format(new Date());
-    res.render("listings/show.ejs", { listing, todayISO });
+    const galleryImages = [listing.image?.url || "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1400&q=80", ...(listing.gallery || []).map((photo) => photo.url)]
+        .filter(Boolean)
+        .slice(0, 5);
+    const isSampleGallery = String(listing._id) === "6aed6b6963ad867d58036881";
+    res.render("listings/show.ejs", { listing, todayISO, galleryImages, isSampleGallery });
 };
 
 module.exports.nearbyPlaces = async (req, res) => {

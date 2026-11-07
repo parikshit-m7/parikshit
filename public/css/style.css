@@ -467,6 +467,18 @@ img, video, canvas, svg { max-width: 100%; }
 .contact-action-whatsapp { background:#128c4a; border-color:#128c4a; color:#fff; }
 .contact-action-whatsapp:hover { background:#0f773f; border-color:#0f773f; color:#fff; }
 .stay-contact-number { margin:14px 0 0; font-weight:800; }
+.flash-stack { position:fixed; top:82px; right:clamp(14px,3vw,34px); z-index:2000; display:grid; gap:10px; width:min(420px,calc(100vw - 28px)); pointer-events:none; }
+.flash-toast { display:flex; align-items:center; gap:12px; min-width:0; padding:12px 14px; border:1px solid transparent; border-radius:15px; box-shadow:0 14px 38px rgba(18,24,32,.18); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); pointer-events:auto; opacity:1; transform:translateY(0); transition:opacity .22s ease,transform .22s ease; }
+.flash-toast.is-leaving { opacity:0; transform:translateY(-8px); }
+.flash-toast-success { background:rgba(237,248,240,.97); border-color:#c8e5d0; color:#205335; }
+.flash-toast-error { background:rgba(255,242,240,.98); border-color:#efc8c4; color:#7e302b; }
+.flash-toast-icon { display:grid; place-items:center; flex:0 0 32px; width:32px; height:32px; border-radius:50%; background:rgba(44,125,75,.12); }
+.flash-toast-error .flash-toast-icon { background:rgba(176,58,48,.12); }
+.flash-toast-copy { flex:1; min-width:0; font-size:.9rem; font-weight:700; line-height:1.45; overflow-wrap:anywhere; }
+.flash-toast-close { display:grid; place-items:center; flex:0 0 30px; width:30px; height:30px; border:0; border-radius:50%; background:transparent; color:inherit; opacity:.72; }
+.flash-toast-close:hover { background:rgba(20,30,40,.08); opacity:1; }
+@media(max-width:600px) { .flash-stack { top:72px; left:14px; right:14px; width:auto; } .flash-toast { padding:11px 12px; } }
+@media(prefers-reduced-motion:reduce) { .flash-toast { transition:none; } }
 .nearby-tabs,.host-response-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
 .nearby-tab { border:1px solid var(--line); border-radius:999px; background:white; padding:8px 13px; white-space:nowrap; }
 .nearby-tab.active { background:var(--green); border-color:var(--green); color:white; }

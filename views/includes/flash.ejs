@@ -1,21 +1,18 @@
-<% if(success && success.length){ %>
-<div class="alert alert-success alert-dismissible fade show col-6 offset-3" role="alert">
-    <%= success %>
-    <button type="button" 
-      class="btn-close" 
-      data-bs-dismiss="alert"
-      aria-label="Close">
-    </button>
-</div>
-<% } %>
-
-<% if(error && error.length){ %>
-<div class="alert alert-danger alert-dismissible fade show col-6 offset-3" role="alert">
-    <%= error %>
-    <button type="button" 
-      class="btn-close" 
-      data-bs-dismiss="alert"
-      aria-label="Close">
-    </button>
-</div>
+<% if ((success && success.length) || (error && error.length)) { %>
+  <div class="flash-stack" aria-live="polite" aria-relevant="additions removals">
+    <% (success || []).forEach((message) => { %>
+      <div class="flash-toast flash-toast-success" role="status" data-auto-dismiss="4800">
+        <span class="flash-toast-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+        <span class="flash-toast-copy"><%= message %></span>
+        <button type="button" class="flash-toast-close" data-flash-close aria-label="Dismiss message"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+    <% }); %>
+    <% (error || []).forEach((message) => { %>
+      <div class="flash-toast flash-toast-error" role="alert" data-auto-dismiss="7000">
+        <span class="flash-toast-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+        <span class="flash-toast-copy"><%= message %></span>
+        <button type="button" class="flash-toast-close" data-flash-close aria-label="Dismiss message"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+    <% }); %>
+  </div>
 <% } %>

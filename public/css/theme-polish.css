@@ -167,6 +167,11 @@ html[data-theme="dark"] .nearby-place-card > span,
 html[data-theme="dark"] .booking-card .text-muted { color: #c4cada !important; }
 html[data-theme="dark"] .nearby-place-card .nearby-distance { color: #d9dcff !important; }
 html[data-theme="dark"] ::selection { background: #d9dcff; color: #171925; }
+html[data-theme="dark"] .flash-toast-success { background:rgba(29,48,43,.97); border-color:#35594d; color:#bdebd8; }
+html[data-theme="dark"] .flash-toast-error { background:rgba(56,33,38,.98); border-color:#693743; color:#ffb7bf; }
+html[data-theme="dark"] .flash-toast-icon { background:rgba(112,201,147,.16); }
+html[data-theme="dark"] .flash-toast-error .flash-toast-icon { background:rgba(255,139,150,.16); }
+html[data-theme="dark"] .flash-toast-close:hover { background:rgba(255,255,255,.1); }
 
 html[data-theme="dark"] .filter.active {
   background: #2b2d49 !important;

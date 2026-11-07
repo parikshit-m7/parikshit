@@ -264,6 +264,21 @@ module.exports = async function ensureDemoListings() {
     }, { $set: { isArchived: true } });
 
   await ensureFiveGalleryPhotos();
+  const publicContactPhone = String(process.env.PUBLIC_LISTING_CONTACT_PHONE || "").trim();
+  if (publicContactPhone) {
+    await Listing.updateMany(
+      {
+        isMatrixStay: true,
+        isArchived: { $ne: true },
+        $or: [
+          { contactPhone: { $exists: false } },
+          { contactPhone: null },
+          { contactPhone: "" },
+        ],
+      },
+      { $set: { contactPhone: publicContactPhone } }
+    );
+  }
 };
 
 module.exports.destinations = destinations;

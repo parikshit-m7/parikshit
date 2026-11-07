@@ -54,6 +54,39 @@ function photoIdentity(url) {
   return String(url || "").split("?")[0];
 }
 
+async function ensureFiveGalleryPhotos() {
+  const listings = await Listing.find({ isMatrixStay: true, isArchived: { $ne: true } })
+    .select("_id image.url gallery galleryIsSample");
+
+  for (const listing of listings) {
+    const gallery = listing.gallery || [];
+    const existingCount = (listing.image?.url ? 1 : 0) + gallery.length;
+    const hasOldSamplePhotos = gallery.some((photo) => String(photo.filename || "").startsWith("test-gallery-"));
+    const isSample = listing.galleryIsSample || hasOldSamplePhotos;
+    if (existingCount >= 5) {
+      if (isSample && !listing.galleryIsSample) {
+        await Listing.updateOne({ _id: listing._id }, { $set: { galleryIsSample: true } });
+      }
+      continue;
+    }
+
+    const used = new Set([listing.image?.url, ...gallery.map((photo) => photo.url)]
+      .filter(Boolean).map(photoIdentity));
+    const offset = Number.parseInt(String(listing._id).slice(-6), 16) % stayPhotos.length;
+    const candidates = [...stayPhotos.slice(offset), ...stayPhotos.slice(0, offset)];
+    const additions = candidates
+      .filter((url) => !used.has(photoIdentity(url)))
+      .slice(0, Math.max(0, 5 - existingCount))
+      .map((url, index) => ({ url, filename: `sample-gallery-${listing._id}-${index + 1}` }));
+
+    if (existingCount + additions.length >= 5) {
+      await Listing.updateOne({ _id: listing._id }, {
+        $set: { gallery: [...gallery, ...additions], galleryIsSample: true },
+      });
+    }
+  }
+}
+
 function destinationForListing(listing) {
   const text = `${listing.title || ""} ${listing.location || ""}`;
   return destinations.find((destination) => destination.aliases.some((alias) =>
@@ -218,11 +251,6 @@ module.exports = async function ensureDemoListings() {
 
   await assignExistingListings(occupiedSlots, usedPhotos);
   await seedMissingMatrixListings(occupiedSlots, usedPhotos);
-  await Listing.updateMany(
-    { "gallery.filename": /^test-gallery-/ },
-    { $pull: { gallery: { filename: /^test-gallery-/ } } }
-  );
-
   // The public catalogue is the 12 × 7 destination/category matrix. Older
   // India listings outside that matrix stay in MongoDB for history, but are
   // archived from new search results and bookings.
@@ -234,6 +262,8 @@ module.exports = async function ensureDemoListings() {
       { matrixKey: { $nin: [...matrixKeys] } },
     ],
     }, { $set: { isArchived: true } });
+
+  await ensureFiveGalleryPhotos();
 };
 
 module.exports.destinations = destinations;

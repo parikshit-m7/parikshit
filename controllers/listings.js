@@ -192,7 +192,7 @@ module.exports.showListing = async (req, res) => {
     const galleryImages = [listing.image?.url || "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1400&q=80", ...(listing.gallery || []).map((photo) => photo.url)]
         .filter(Boolean)
         .slice(0, 10);
-    res.render("listings/show.ejs", { listing, todayISO, galleryImages });
+    res.render("listings/show.ejs", { listing, todayISO, galleryImages, isSampleGallery: listing.galleryIsSample });
 };
 
 module.exports.nearbyPlaces = async (req, res) => {
@@ -298,7 +298,12 @@ module.exports.updateListing = async (req, res) => {
   listing.categories = req.body.listing.categories || [];
 
   const uploadedPhotos = req.files || [];
-  const existingPhotoCount = (listing.image?.url ? 1 : 0) + (listing.gallery || []).length;
+  const isReplacingSampleGallery = listing.galleryIsSample && uploadedPhotos.length >= 5;
+  const existingPhotoCount = listing.galleryIsSample
+    ? (uploadedPhotos.length === 0
+      ? (listing.image?.url ? 1 : 0) + (listing.gallery || []).length
+      : uploadedPhotos.length >= 5 ? 0 : (listing.image?.url ? 1 : 0))
+    : (listing.image?.url ? 1 : 0) + (listing.gallery || []).length;
   if (existingPhotoCount + uploadedPhotos.length < 5) {
     req.flash("error", `This stay needs at least 5 photos. Add ${5 - existingPhotoCount} more.`);
     return res.redirect(`/listings/${id}/edit`);
@@ -309,8 +314,18 @@ module.exports.updateListing = async (req, res) => {
   }
   if (uploadedPhotos.length) {
     const uploadedGallery = uploadedPhotos.map((photo) => ({ url: photo.path, filename: photo.filename }));
-    if (!listing.image?.url) listing.image = uploadedGallery.shift();
-    listing.gallery = [...(listing.gallery || []), ...uploadedGallery];
+    if (isReplacingSampleGallery) {
+      listing.image = uploadedGallery.shift();
+      listing.gallery = uploadedGallery;
+      listing.galleryIsSample = false;
+    } else if (listing.galleryIsSample) {
+      listing.gallery = uploadedGallery;
+      listing.galleryIsSample = false;
+      if (!listing.image?.url) listing.image = listing.gallery.shift();
+    } else {
+      if (!listing.image?.url) listing.image = uploadedGallery.shift();
+      listing.gallery = [...(listing.gallery || []), ...uploadedGallery];
+    }
   }
 
   if (req.body.listing.location && geocodingClient) {

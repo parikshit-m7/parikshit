@@ -54,8 +54,8 @@
       <!-- Image -->
       <div class="mb-3">
         <label for="listing-photos" class="form-label">Add stay photos (minimum 5 total)</label>
-        <input id="listing-photos" name="listing[images]" type="file" class="form-control listing-photo-input" accept="image/png,image/jpeg,image/jpg,image/webp" multiple data-existing-count="<%= (listing.image?.url ? 1 : 0) + (listing.gallery || []).length %>" />
-        <div class="form-text" data-photo-count role="status">Current photos: <%= (listing.image?.url ? 1 : 0) + (listing.gallery || []).length %>. Add photos of this same stay.</div>
+        <input id="listing-photos" name="listing[images]" type="file" class="form-control listing-photo-input" accept="image/png,image/jpeg,image/jpg,image/webp" multiple data-existing-count="<%= listing.galleryIsSample ? 0 : (listing.image?.url ? 1 : 0) + (listing.gallery || []).length %>" data-sample-gallery="<%= listing.galleryIsSample ? 'true' : 'false' %>" />
+        <div class="form-text" data-photo-count role="status"><%= listing.galleryIsSample ? 'This gallery has sample hotel photos. Upload at least 5 real photos to replace them.' : `Current photos: ${(listing.image?.url ? 1 : 0) + (listing.gallery || []).length}. Add photos of this same stay.` %></div>
       </div>
 
 

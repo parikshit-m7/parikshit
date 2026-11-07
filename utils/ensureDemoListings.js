@@ -264,11 +264,11 @@ module.exports = async function ensureDemoListings() {
     }, { $set: { isArchived: true } });
 
   await ensureFiveGalleryPhotos();
-  const publicContactPhone = String(process.env.PUBLIC_LISTING_CONTACT_PHONE || "").trim();
-  if (publicContactPhone) {
-    await Listing.updateMany(
+  const featuredListingContactPhone = String(process.env.FEATURED_LISTING_CONTACT_PHONE || "").trim();
+  if (featuredListingContactPhone) {
+    await Listing.updateOne(
       {
-        isMatrixStay: true,
+        _id: "6aed6b6963ad867d58036881",
         isArchived: { $ne: true },
         $or: [
           { contactPhone: { $exists: false } },
@@ -276,7 +276,7 @@ module.exports = async function ensureDemoListings() {
           { contactPhone: "" },
         ],
       },
-      { $set: { contactPhone: publicContactPhone } }
+      { $set: { contactPhone: featuredListingContactPhone } }
     );
   }
 };

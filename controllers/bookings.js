@@ -92,11 +92,6 @@ module.exports.create = async (req, res) => {
   if (req.body.bookingContactConsent !== "yes") {
     return jsonError(res, 400, "Please agree to share your booking contact details with the stay host.");
   }
-  const aadhaarLast4 = typeof req.body.aadhaarLast4 === "string" ? req.body.aadhaarLast4.trim() : "";
-  if (aadhaarLast4 && !/^\d{4}$/.test(aadhaarLast4)) {
-    return jsonError(res, 400, "Enter only the last 4 digits, or leave the optional ID field blank.");
-  }
-
   const dates = bookingDates(req.body);
   if (dates.error) return jsonError(res, 400, dates.error);
   const rooms = Number(req.body.rooms);
@@ -127,7 +122,6 @@ module.exports.create = async (req, res) => {
         listing: listing._id,
         bookedBy: req.user._id,
         guestPhone,
-        ...(aadhaarLast4 ? { aadhaarLast4 } : {}),
         checkIn: dates.checkIn,
         checkOut: dates.checkOut,
         nights: dates.nights,

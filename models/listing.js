@@ -19,6 +19,7 @@ const listingSchema = new Schema({
       url: String,
       filename: String,
     }],
+    galleryIsSample: { type: Boolean, default: false },
     price: Number,
     rooms: { type: Number, min: 1, max: 99, default: 1 },
     reservationVersion: { type: Number, default: 0 },

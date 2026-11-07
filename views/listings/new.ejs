@@ -46,8 +46,9 @@
 
       <!-- Image -->
       <div class="mb-3">
-        <label for="image" class="form-label">Upload Listing Image</label>
-        <input name="listing[image]" type="file" class="form-control" accept="image/png,image/jpeg,image/jpg" required />
+        <label for="listing-photos" class="form-label">Stay photos (minimum 5)</label>
+        <input id="listing-photos" name="listing[images]" type="file" class="form-control listing-photo-input" accept="image/png,image/jpeg,image/jpg,image/webp" multiple required data-existing-count="0" />
+        <div class="form-text" data-photo-count role="status">Upload 5–10 photos of this same stay.</div>
       </div>
 
       <!-- Price + Country -->
@@ -149,3 +150,4 @@
     </form>
   </div>
 </div>
+<script src="/js/listing-photo-count.js" defer></script>

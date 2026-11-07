@@ -24,6 +24,18 @@ function bookingDates(body) {
   return { checkIn, checkOut, nights };
 }
 
+function normalizeBookingPhone(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!/^[+0-9\s().-]+$/.test(trimmed)) return null;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length < 10 || digits.length > 15) return null;
+  if (trimmed.startsWith("+")) return `+${digits}`;
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.length === 11 && digits.startsWith("0")) return `+91${digits.slice(1)}`;
+  return `+${digits}`;
+}
+
 function calculateTotal(listing, nights, rooms) {
   const totalPaise = Math.round(Number(listing.price || 0) * 100) * nights * rooms;
   return Number.isSafeInteger(totalPaise) ? totalPaise / 100 : NaN;
@@ -75,6 +87,16 @@ module.exports.create = async (req, res) => {
     return jsonError(res, 403, "You cannot book your own stay.");
   }
 
+  const guestPhone = normalizeBookingPhone(req.body.guestPhone);
+  if (!guestPhone) return jsonError(res, 400, "Enter a valid mobile number for this booking.");
+  if (req.body.bookingContactConsent !== "yes") {
+    return jsonError(res, 400, "Please agree to share your booking contact details with the stay host.");
+  }
+  const aadhaarLast4 = typeof req.body.aadhaarLast4 === "string" ? req.body.aadhaarLast4.trim() : "";
+  if (aadhaarLast4 && !/^\d{4}$/.test(aadhaarLast4)) {
+    return jsonError(res, 400, "Enter only the last 4 digits, or leave the optional ID field blank.");
+  }
+
   const dates = bookingDates(req.body);
   if (dates.error) return jsonError(res, 400, dates.error);
   const rooms = Number(req.body.rooms);
@@ -104,6 +126,8 @@ module.exports.create = async (req, res) => {
       booking = new Booking({
         listing: listing._id,
         bookedBy: req.user._id,
+        guestPhone,
+        ...(aadhaarLast4 ? { aadhaarLast4 } : {}),
         checkIn: dates.checkIn,
         checkOut: dates.checkOut,
         nights: dates.nights,

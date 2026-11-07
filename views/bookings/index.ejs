@@ -13,6 +13,8 @@
           <div class="booking-card-body">
             <h2><%= booking.listing?.title || 'Stay no longer available' %></h2>
             <p class="text-muted"><%= booking.listing?.location || '' %></p>
+            <% if (booking.guestPhone) { %><p class="booking-guest-detail"><i class="fa-solid fa-phone"></i> Contact: <%= booking.guestPhone %></p><% } %>
+            <% if (booking.aadhaarLast4) { %><p class="booking-guest-detail"><i class="fa-regular fa-id-card"></i> Aadhaar ending ••••<%= booking.aadhaarLast4 %></p><% } %>
             <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
             <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
             <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status %></span><% } %>

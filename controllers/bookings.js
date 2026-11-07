@@ -46,7 +46,7 @@ async function reservedRooms(listingId, checkIn, checkOut, session) {
     listing: listingId,
     checkIn: { $lt: checkOut },
     checkOut: { $gt: checkIn },
-    status: "confirmed",
+    status: { $in: ["confirmed", "cancellation_requested"] },
   }).select("rooms -_id");
   if (session) query.session(session);
   const reservations = await query.lean();
@@ -169,32 +169,69 @@ module.exports.hosting = async (req, res) => {
 module.exports.cancel = async (req, res) => {
   const booking = await Booking.findOne({ _id: req.params.bookingId, bookedBy: req.user._id });
   if (!booking) throw new ExpressError(404, "Booking could not be found.");
-  if (!["confirmed", "payment_pending"].includes(booking.status)) {
-    req.flash("error", "Only confirmed bookings can be cancelled.");
+  if (booking.status === "cancellation_requested") {
+    req.flash("error", "Your cancellation request is already waiting for the host.");
+    return res.redirect("/bookings");
+  }
+  if (booking.status !== "confirmed") {
+    req.flash("error", "Only confirmed bookings can be sent to the host for cancellation.");
     return res.redirect("/bookings");
   }
 
-  if (booking.status === "confirmed") {
-    const todayISO = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
-    }).format(new Date());
-    if (booking.checkIn.toISOString().slice(0, 10) <= todayISO) {
-      req.flash("error", "This booking can no longer be cancelled online because check-in has started.");
-      return res.redirect("/bookings");
-    }
-    const cancelled = await Booking.findOneAndUpdate(
-      { _id: booking._id, bookedBy: req.user._id, status: "confirmed", checkIn: { $gt: new Date(`${todayISO}T00:00:00.000Z`) } },
-      { $set: { status: "cancelled" } },
-      { new: true }
-    );
-    if (!cancelled) {
-      req.flash("error", "This booking could not be cancelled. Please refresh and try again.");
-      return res.redirect("/bookings");
-    }
-  } else {
-    booking.status = "cancelled";
-    await booking.save();
+  const todayISO = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  if (booking.checkIn.toISOString().slice(0, 10) <= todayISO) {
+    req.flash("error", "A cancellation request must be sent before the check-in date.");
+    return res.redirect("/bookings");
   }
-  req.flash("success", "Booking cancelled.");
+
+  const requested = await Booking.findOneAndUpdate(
+    { _id: booking._id, bookedBy: req.user._id, status: "confirmed", checkIn: { $gt: new Date(`${todayISO}T00:00:00.000Z`) } },
+    { $set: { status: "cancellation_requested" } },
+    { new: true }
+  );
+  if (!requested) {
+    req.flash("error", "Could not send the cancellation request. Please refresh and try again.");
+    return res.redirect("/bookings");
+  }
+  req.flash("success", "Cancellation request sent to the host.");
   res.redirect("/bookings");
+};
+
+module.exports.respondToCancellation = async (req, res) => {
+  const booking = await Booking.findById(req.params.bookingId).populate("listing", "owner");
+  if (!booking || !booking.listing) throw new ExpressError(404, "Booking could not be found.");
+  if (!booking.listing.owner || !booking.listing.owner.equals(req.user._id)) {
+    throw new ExpressError(403, "Only this stay's host can respond to the request.");
+  }
+  if (booking.status !== "cancellation_requested") {
+    req.flash("error", "This cancellation request is no longer waiting for a response.");
+    return res.redirect("/bookings/hosting");
+  }
+
+  let nextStatus;
+  if (req.params.decision === "approve") {
+    nextStatus = "cancelled";
+  } else if (req.params.decision === "decline") {
+    nextStatus = "confirmed";
+  } else {
+    throw new ExpressError(400, "Choose approve or decline.");
+  }
+
+  const response = await Booking.findOneAndUpdate(
+    { _id: booking._id, status: "cancellation_requested" },
+    { $set: { status: nextStatus } },
+    { new: true }
+  );
+  if (!response) {
+    req.flash("error", "This cancellation request has already been answered.");
+    return res.redirect("/bookings/hosting");
+  }
+  if (nextStatus === "cancelled") {
+    req.flash("success", "Cancellation approved. The rooms are available again.");
+  } else {
+    req.flash("success", "Cancellation request declined. The booking remains confirmed.");
+  }
+  res.redirect("/bookings/hosting");
 };

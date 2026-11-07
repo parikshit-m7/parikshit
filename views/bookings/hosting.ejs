@@ -15,7 +15,17 @@
             <p class="text-muted">Booked by <%= booking.bookedBy?.username || 'Wanderlust guest' %></p>
             <% if (booking.guestPhone) { %><p class="booking-guest-detail"><i class="fa-solid fa-phone"></i> Guest contact: <a href="tel:<%= booking.guestPhone %>"><%= booking.guestPhone %></a></p><% } %>
             <div class="booking-facts"><span><strong>Check-in</strong><%= booking.checkIn.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Check-out</strong><%= booking.checkOut.toLocaleDateString("en-IN", {timeZone:"UTC",day:"numeric",month:"short",year:"numeric"}) %></span><span><strong>Rooms</strong><%= booking.rooms || 1 %></span><span><strong>Guests</strong><%= booking.guests %></span><span><strong>Total</strong>₹ <%= booking.totalPrice.toLocaleString("en-IN") %></span></div>
-            <% if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
+            <% if (booking.status === 'cancellation_requested') { %>
+              <span class="booking-status status-cancellation-requested">Cancellation requested</span>
+              <div class="booking-response-actions">
+                <form method="POST" action="/bookings/<%= booking._id %>/cancellation/approve" onsubmit="return confirm('Approve this cancellation? The rooms will become available again.');">
+                  <button class="booking-approve-cancel" type="submit">Approve cancellation</button>
+                </form>
+                <form method="POST" action="/bookings/<%= booking._id %>/cancellation/decline" onsubmit="return confirm('Decline this cancellation request? The booking will remain confirmed.');">
+                  <button class="booking-keep-booking" type="submit">Keep booking</button>
+                </form>
+              </div>
+            <% } else if (booking.status === 'confirmed') { %><span class="booking-status status-confirmed">Booking confirmed</span>
             <% } else { %><span class="booking-status status-<%= booking.status %>"><%= booking.status === 'pending' ? 'Previous booking request' : booking.status === 'cancelled' ? 'Cancelled' : booking.status %></span><% } %>
           </div>
           <% if (booking.listing) { %><a class="booking-open" href="/listings/<%= booking.listing._id %>" aria-label="View stay"><i class="fa-solid fa-arrow-up-right-from-square"></i></a><% } %>

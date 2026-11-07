@@ -461,6 +461,12 @@ img, video, canvas, svg { max-width: 100%; }
 .booking-total { display:flex; justify-content:space-between; gap:10px; padding:14px 0 4px; border-top:1px solid var(--line); }
 .my-bookings-link { display:flex; justify-content:center; gap:8px; margin-top:14px; color:var(--green); font-weight:700; text-decoration:none; }
 .nearby-explore { margin-top:30px; padding-top:26px; border-top:1px solid var(--line); }
+.contact-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.contact-action { display:inline-flex; align-items:center; gap:9px; min-height:44px; padding:10px 16px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); font-weight:750; text-decoration:none; transition:transform .18s ease, border-color .18s ease, background .18s ease; }
+.contact-action:hover { transform:translateY(-1px); border-color:var(--green); color:var(--ink); }
+.contact-action-whatsapp { background:#128c4a; border-color:#128c4a; color:#fff; }
+.contact-action-whatsapp:hover { background:#0f773f; border-color:#0f773f; color:#fff; }
+.stay-contact-number { margin:14px 0 0; font-weight:800; }
 .nearby-tabs,.host-response-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
 .nearby-tab { border:1px solid var(--line); border-radius:999px; background:white; padding:8px 13px; white-space:nowrap; }
 .nearby-tab.active { background:var(--green); border-color:var(--green); color:white; }

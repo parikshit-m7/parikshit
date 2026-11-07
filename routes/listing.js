@@ -22,7 +22,6 @@ router
 //New Route
 router.get("/new", isLoggedIn, listingController.renderNewForm);
 
-router.get("/:id/nearby", wrapAsync(listingController.nearbyPlaces));
 router.get("/:id/availability", wrapAsync(bookingController.availability));
 router.post("/:id/bookings", isLoggedIn, wrapAsync(bookingController.create));
 

@@ -25,6 +25,7 @@ const listingSchema = new Schema({
     reservationVersion: { type: Number, default: 0 },
     location: String,
     country: String,
+    contactPhone: { type: String, trim: true },
     demoKey: { type: String, unique: true, sparse: true },
     matrixKey: { type: String, unique: true, sparse: true },
     destinationKey: { type: String, index: true },

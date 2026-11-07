@@ -549,6 +549,10 @@ img, video, canvas, svg { max-width: 100%; }
 .booking-guest-detail i { margin-right:5px; color:var(--green); }
 .booking-guest-detail a { color:var(--green); font-weight:700; }
 .booking-form input,.booking-form select { width:100%; min-height:44px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; color:inherit; }
+.booking-sidebar,.booking-form { min-width:0; }
+.booking-consent { width:100%; min-width:0; }
+.booking-consent input { width:16px !important; min-width:16px; max-width:16px; }
+.booking-consent span { flex:1 1 0; min-width:0; overflow-wrap:anywhere; }
 .booking-total { display:flex; justify-content:space-between; gap:10px; padding:14px 0 4px; border-top:1px solid var(--line); }
 .my-bookings-link { display:flex; justify-content:center; gap:8px; margin-top:14px; color:var(--green); font-weight:700; text-decoration:none; }
 .nearby-explore { margin-top:30px; padding-top:26px; border-top:1px solid var(--line); }

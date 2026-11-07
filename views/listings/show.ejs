@@ -83,16 +83,16 @@
           <div class="booking-contact-field">
             <label for="booking-phone">Mobile number</label>
             <input type="tel" id="booking-phone" name="guestPhone" value="<%= currUser?.phone || '' %>" autocomplete="tel" inputmode="tel" maxlength="20" pattern="[+0-9(). -]{8,20}" placeholder="e.g. +91 98765 43210" required>
-            <p class="booking-contact-help">The stay host can use this number to coordinate your booking.</p>
+            <p class="booking-contact-help">The host can contact you about this booking.</p>
           </div>
           <div class="booking-contact-field">
             <label for="aadhaar-last4">Aadhaar last 4 digits <span class="text-muted">(optional)</span></label>
             <input type="text" id="aadhaar-last4" name="aadhaarLast4" inputmode="numeric" autocomplete="off" maxlength="4" pattern="[0-9]{4}" placeholder="Last 4 digits only">
-            <p class="booking-contact-help">Optional reference only. Never enter your full Aadhaar number; this does not verify your identity.</p>
+            <p class="booking-contact-help">Optional. Enter only the last 4 Aadhaar digits; this does not verify identity.</p>
           </div>
           <label class="booking-consent" for="booking-contact-consent">
             <input type="checkbox" id="booking-contact-consent" name="bookingContactConsent" value="yes" required>
-            <span>I agree to share my mobile number and, if entered, the last 4 ID digits with this stay's host for this booking.</span>
+            <span>I agree to share my mobile number and optional last 4 ID digits with the host for this booking.</span>
           </label>
           <p id="booking-availability" class="small text-muted mb-0" role="status">Choose dates to check rooms.</p>
           <div class="booking-total"><span id="booking-nights">Select dates</span><strong id="booking-price">₹ <%= (listing.price || 0).toLocaleString("en-IN") %> / room / night</strong></div>

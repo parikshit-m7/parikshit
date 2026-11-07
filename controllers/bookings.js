@@ -147,7 +147,10 @@ module.exports.index = async (req, res) => {
   const bookings = await Booking.find({ bookedBy: req.user._id })
     .populate("listing", "title location image price")
     .sort({ createdAt: -1 });
-  res.render("bookings/index.ejs", { bookings });
+  const todayISO = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  res.render("bookings/index.ejs", { bookings, todayISO });
 };
 
 module.exports.hosting = async (req, res) => {
@@ -166,12 +169,32 @@ module.exports.hosting = async (req, res) => {
 module.exports.cancel = async (req, res) => {
   const booking = await Booking.findOne({ _id: req.params.bookingId, bookedBy: req.user._id });
   if (!booking) throw new ExpressError(404, "Booking could not be found.");
-  if (booking.status !== "payment_pending") {
-    req.flash("error", "This booking cannot be cancelled from this page.");
+  if (!["confirmed", "payment_pending"].includes(booking.status)) {
+    req.flash("error", "Only confirmed bookings can be cancelled.");
     return res.redirect("/bookings");
   }
-  booking.status = "cancelled";
-  await booking.save();
+
+  if (booking.status === "confirmed") {
+    const todayISO = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    if (booking.checkIn.toISOString().slice(0, 10) <= todayISO) {
+      req.flash("error", "This booking can no longer be cancelled online because check-in has started.");
+      return res.redirect("/bookings");
+    }
+    const cancelled = await Booking.findOneAndUpdate(
+      { _id: booking._id, bookedBy: req.user._id, status: "confirmed", checkIn: { $gt: new Date(`${todayISO}T00:00:00.000Z`) } },
+      { $set: { status: "cancelled" } },
+      { new: true }
+    );
+    if (!cancelled) {
+      req.flash("error", "This booking could not be cancelled. Please refresh and try again.");
+      return res.redirect("/bookings");
+    }
+  } else {
+    booking.status = "cancelled";
+    await booking.save();
+  }
   req.flash("success", "Booking cancelled.");
   res.redirect("/bookings");
 };

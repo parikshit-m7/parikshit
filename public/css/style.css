@@ -592,6 +592,9 @@ img, video, canvas, svg { max-width: 100%; }
 .booking-facts { display:flex; flex-wrap:wrap; gap:12px 22px; }
 .booking-facts span { display:grid; }
 .booking-status { display:inline-block; margin-top:12px; padding:6px 10px; border-radius:999px; background:#fff3d9; color:#795411; font-size:.8rem; font-weight:700; }
+.booking-cancel-form { margin-top:12px; }
+.booking-cancel-button { padding:8px 14px; border:1px solid #d77b78; border-radius:999px; background:transparent; color:#c45b57; font-weight:700; }
+.booking-cancel-button:hover { background:#c45b57; color:#fff; }
 .status-confirmed { background:#e5f4ec; color:#245d40; }
 .status-pending,.status-payment_pending { background:#fff4dd; color:#76531a; }
 .status-payment_failed,.status-payment_refunded { background:#fce9e8; color:#873c38; }

@@ -53,8 +53,9 @@
      
       <!-- Image -->
       <div class="mb-3">
-        <label for="image" class="form-label">Upload New Image </label>
-        <input name="listing[image]" type="file" class="form-control"/>
+        <label for="listing-photos" class="form-label">Add stay photos (minimum 5 total)</label>
+        <input id="listing-photos" name="listing[images]" type="file" class="form-control listing-photo-input" accept="image/png,image/jpeg,image/jpg,image/webp" multiple data-existing-count="<%= (listing.image?.url ? 1 : 0) + (listing.gallery || []).length %>" />
+        <div class="form-text" data-photo-count role="status">Current photos: <%= (listing.image?.url ? 1 : 0) + (listing.gallery || []).length %>. Add photos of this same stay.</div>
       </div>
 
 
@@ -155,4 +156,5 @@
 
   </div>
 </div>
+<script src="/js/listing-photo-count.js" defer></script>
 

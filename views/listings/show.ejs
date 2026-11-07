@@ -25,7 +25,6 @@
     <img src="<%= photo %>" class="show-img" alt="<%= listing.title %> — photo <%= index + 1 %> of <%= galleryImages.length %>"
       <%= index === 0 ? 'fetchpriority="high"' : 'loading="lazy"' %>>
   <% }); %>
-  <% if (isSampleGallery) { %><span class="gallery-sample-label">Sample gallery photos for testing</span><% } %>
 </div>
 
 <div class="detail-panel">

@@ -1,8 +1,6 @@
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
 
-const TEST_GALLERY_LISTING_ID = "6aed6b6963ad867d58036881";
-
 const destinations = [
   { key: "agra", name: "Agra", aliases: ["Agra", "Taj Mahal"], location: "Taj Mahal, Agra, Uttar Pradesh", coordinates: [78.0421, 27.1751], basePrice: 4200, defaultCategory: "city-breaks", nearby: "the Taj Mahal and Agra's heritage quarter" },
   { key: "varanasi", name: "Varanasi", aliases: ["Varanasi", "Banaras", "Benares"], location: "Assi Ghat, Varanasi, Uttar Pradesh", coordinates: [83.0107, 25.282], basePrice: 3200, defaultCategory: "by-water", nearby: "the ghats and old lanes of Varanasi" },
@@ -54,21 +52,6 @@ const matrixKeys = new Set(destinations.flatMap((destination) =>
 
 function photoIdentity(url) {
   return String(url || "").split("?")[0];
-}
-
-async function ensureTestListingGallery() {
-  const listing = await Listing.findById(TEST_GALLERY_LISTING_ID).select("image.url gallery");
-  if (!listing || (listing.gallery || []).length) return;
-
-  const usedPhotos = new Set([listing.image?.url].filter(Boolean).map(photoIdentity));
-  const gallery = stayPhotos
-    .filter((url) => !usedPhotos.has(photoIdentity(url)))
-    .slice(0, 4)
-    .map((url, index) => ({ url, filename: `test-gallery-${index + 1}` }));
-
-  if (gallery.length === 4) {
-    await Listing.updateOne({ _id: listing._id }, { $set: { gallery } });
-  }
 }
 
 function destinationForListing(listing) {
@@ -235,7 +218,10 @@ module.exports = async function ensureDemoListings() {
 
   await assignExistingListings(occupiedSlots, usedPhotos);
   await seedMissingMatrixListings(occupiedSlots, usedPhotos);
-  await ensureTestListingGallery();
+  await Listing.updateMany(
+    { "gallery.filename": /^test-gallery-/ },
+    { $pull: { gallery: { filename: /^test-gallery-/ } } }
+  );
 
   // The public catalogue is the 12 × 7 destination/category matrix. Older
   // India listings outside that matrix stay in MongoDB for history, but are

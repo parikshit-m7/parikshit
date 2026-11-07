@@ -191,9 +191,8 @@ module.exports.showListing = async (req, res) => {
     }).format(new Date());
     const galleryImages = [listing.image?.url || "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1400&q=80", ...(listing.gallery || []).map((photo) => photo.url)]
         .filter(Boolean)
-        .slice(0, 5);
-    const isSampleGallery = String(listing._id) === "6aed6b6963ad867d58036881";
-    res.render("listings/show.ejs", { listing, todayISO, galleryImages, isSampleGallery });
+        .slice(0, 10);
+    res.render("listings/show.ejs", { listing, todayISO, galleryImages });
 };
 
 module.exports.nearbyPlaces = async (req, res) => {
@@ -258,14 +257,15 @@ module.exports.createListing = ( async (req, res,next) => {
     }
   }
 
-    if (!req.file) {
-      req.flash("error", "Please upload a listing image.");
+    const uploadedPhotos = req.files || [];
+    if (uploadedPhotos.length < 5) {
+      req.flash("error", "Please upload at least 5 photos of this stay.");
       return res.redirect("/listings/new");
     }
-    const { path: url, filename } = req.file;
     const newListing = new Listing(req.body.listing);
     newListing.owner = req.user._id;
-    newListing.image = { url, filename };
+    newListing.image = { url: uploadedPhotos[0].path, filename: uploadedPhotos[0].filename };
+    newListing.gallery = uploadedPhotos.slice(1).map((photo) => ({ url: photo.path, filename: photo.filename }));
     if (geocodedGeometry) newListing.geometry = geocodedGeometry;
     let savedListing = await newListing.save();
     console.log(savedListing);
@@ -297,9 +297,20 @@ module.exports.updateListing = async (req, res) => {
   Object.assign(listing, req.body.listing);
   listing.categories = req.body.listing.categories || [];
 
-  // Keep the existing photo unless a new one was uploaded.
-  if (req.file) {
-    listing.image = { url: req.file.path, filename: req.file.filename };
+  const uploadedPhotos = req.files || [];
+  const existingPhotoCount = (listing.image?.url ? 1 : 0) + (listing.gallery || []).length;
+  if (existingPhotoCount + uploadedPhotos.length < 5) {
+    req.flash("error", `This stay needs at least 5 photos. Add ${5 - existingPhotoCount} more.`);
+    return res.redirect(`/listings/${id}/edit`);
+  }
+  if (existingPhotoCount + uploadedPhotos.length > 10) {
+    req.flash("error", "A stay can have up to 10 photos.");
+    return res.redirect(`/listings/${id}/edit`);
+  }
+  if (uploadedPhotos.length) {
+    const uploadedGallery = uploadedPhotos.map((photo) => ({ url: photo.path, filename: photo.filename }));
+    if (!listing.image?.url) listing.image = uploadedGallery.shift();
+    listing.gallery = [...(listing.gallery || []), ...uploadedGallery];
   }
 
   if (req.body.listing.location && geocodingClient) {

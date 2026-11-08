@@ -41,6 +41,7 @@
               <a class="dropdown-item account-menu-link" href="/listings/mine"><i class="fa-solid fa-house"></i><span>My listings</span></a>
               <a class="dropdown-item account-menu-link" href="/bookings"><i class="fa-solid fa-suitcase-rolling"></i><span>My trips</span></a>
               <% if (hasHostListings) { %><a class="dropdown-item account-menu-link" href="/bookings/hosting"><i class="fa-solid fa-calendar-check"></i><span>Host bookings</span></a><% } %>
+              <% if (hasHostListings) { %><a class="dropdown-item account-menu-link" href="/bookings/notifications"><i class="fa-regular fa-bell"></i><span>Notifications</span><% if (hostUnreadNotificationCount) { %><span class="host-notification-count"><%= hostUnreadNotificationCount %></span><% } %></a><% } %>
               <button class="dropdown-item account-menu-link saved-stays-toggle" type="button" data-favorites-filter aria-pressed="false" aria-label="Show saved stays">
                 <i class="fa-regular fa-heart" aria-hidden="true"></i><span>Saved</span><span class="saved-count ms-auto" data-favorites-count>0</span>
               </button>

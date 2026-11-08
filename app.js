@@ -17,6 +17,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const User = require("./models/user.js");
 const Listing = require("./models/listing.js");
+const Notification = require("./models/notification.js");
 const ensureDemoListings = require("./utils/ensureDemoListings.js");
 
 const listingRouter = require("./routes/listing.js");
@@ -114,9 +115,19 @@ app.use(async (req, res, next) =>{
     }
     res.locals.currUser = req.user;
     try {
-        res.locals.hasHostListings = req.user
-            ? Boolean(await Listing.exists({ owner: req.user._id }))
-            : false;
+        res.locals.hasHostListings = false;
+        res.locals.hostUnreadNotificationCount = 0;
+        if (req.user) {
+            const hostListings = await Listing.find({ owner: req.user._id }).select("_id").lean();
+            res.locals.hasHostListings = hostListings.length > 0;
+            if (hostListings.length) {
+                res.locals.hostUnreadNotificationCount = await Notification.countDocuments({
+                    recipient: req.user._id,
+                    listing: { $in: hostListings.map((listing) => listing._id) },
+                    readAt: null,
+                });
+            }
+        }
         next();
     } catch (error) {
         next(error);

@@ -505,10 +505,18 @@ html[data-theme="dark"] .hero-copy .eyebrow::before { background: #a5aae8; }
   font-weight: 700;
 }
 .notification-read-all-form { display: flex; justify-content: flex-end; margin: 0 0 14px; }
+.booking-notification-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 .booking-notification {
-  display: flex;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) max-content;
   align-items: center;
   gap: 15px;
+  min-width: 0;
+  width: 100%;
   padding: 18px;
   border: 1px solid var(--line, #dedee8);
   border-radius: 16px;
@@ -525,15 +533,15 @@ html[data-theme="dark"] .hero-copy .eyebrow::before { background: #a5aae8; }
   color: #7168c9;
   background: rgba(113, 104, 201, .12);
 }
-.booking-notification-copy { min-width: 0; flex: 1; }
+.booking-notification-copy { grid-column: 2; min-width: 0; overflow-wrap: anywhere; }
 .booking-notification-copy h2 { margin: 0 0 4px; font-size: 16px; }
 .booking-notification-copy p { margin: 0 0 4px; color: var(--muted-color, #777); }
 .booking-notification-copy time { font-size: 12px; color: var(--muted-color, #777); }
-.booking-notification-action { flex: 0 0 auto; font-weight: 650; text-decoration: none; }
+.booking-notification-action { grid-column: 3; grid-row: 1; white-space: nowrap; font-weight: 650; text-decoration: none; }
 html[data-theme="dark"] .booking-notification { color: #f3f2fa; background: #1a1c27; border-color: #303343; }
 html[data-theme="dark"] .booking-notification-copy p,
 html[data-theme="dark"] .booking-notification-copy time { color: #b8bbcb; }
 @media (max-width: 600px) {
-  .booking-notification { align-items: flex-start; flex-wrap: wrap; }
-  .booking-notification-action { margin-left: 57px; }
+  .booking-notification { grid-template-columns: 42px minmax(0, 1fr); align-items: start; }
+  .booking-notification-action { grid-column: 2; grid-row: 2; white-space: normal; }
 }

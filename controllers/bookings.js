@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Listing = require("../models/listing");
 const Booking = require("../models/booking");
+const Notification = require("../models/notification");
 const ExpressError = require("../utils/ExpressError");
 
 const parseDate = (value) => {
@@ -140,7 +141,36 @@ module.exports.create = async (req, res) => {
     await session.endSession();
   }
 
+  if (listing.owner && !listing.owner.equals(req.user._id)) {
+    try {
+      await Notification.create({ recipient: listing.owner, listing: listing._id, booking: booking._id, type: "booking_created" });
+    } catch (error) {
+      console.error("Could not notify host about booking:", error.message);
+    }
+  }
+
   res.status(201).json({ ok: true, bookingId: String(booking._id) });
+};
+
+module.exports.notifications = async (req, res) => {
+  const stays = await Listing.find({ owner: req.user._id }).select("_id").lean();
+  const notifications = stays.length
+    ? await Notification.find({ recipient: req.user._id, listing: { $in: stays.map((stay) => stay._id) } })
+      .populate("listing", "title")
+      .sort({ createdAt: -1 })
+    : [];
+  res.render("bookings/notifications.ejs", { notifications });
+};
+
+module.exports.markNotificationsRead = async (req, res) => {
+  const stays = await Listing.find({ owner: req.user._id }).select("_id").lean();
+  if (stays.length) {
+    await Notification.updateMany(
+      { recipient: req.user._id, listing: { $in: stays.map((stay) => stay._id) }, readAt: null },
+      { $set: { readAt: new Date() } }
+    );
+  }
+  res.redirect("/bookings/notifications");
 };
 
 module.exports.index = async (req, res) => {
@@ -167,7 +197,7 @@ module.exports.hosting = async (req, res) => {
 };
 
 module.exports.cancel = async (req, res) => {
-  const booking = await Booking.findOne({ _id: req.params.bookingId, bookedBy: req.user._id });
+  const booking = await Booking.findOne({ _id: req.params.bookingId, bookedBy: req.user._id }).populate("listing", "owner");
   if (!booking) throw new ExpressError(404, "Booking could not be found.");
   if (booking.status === "cancellation_requested") {
     req.flash("error", "Your cancellation request is already waiting for the host.");
@@ -195,6 +225,13 @@ module.exports.cancel = async (req, res) => {
     req.flash("error", "Could not send the cancellation request. Please refresh and try again.");
     return res.redirect("/bookings");
   }
+  if (booking.listing) {
+    try {
+      await Notification.create({ recipient: booking.listing.owner, listing: booking.listing, booking: booking._id, type: "cancellation_requested" });
+    } catch (error) {
+      console.error("Could not notify host about cancellation:", error.message);
+    }
+  }
   req.flash("success", "Cancellation request sent to the host.");
   res.redirect("/bookings");
 };
@@ -219,15 +256,21 @@ module.exports.respondToCancellation = async (req, res) => {
     throw new ExpressError(400, "Choose approve or decline.");
   }
 
-  const response = await Booking.findOneAndUpdate(
-    { _id: booking._id, status: "cancellation_requested" },
-    { $set: { status: nextStatus } },
-    { new: true }
-  );
+  const response = nextStatus === "cancelled"
+    ? await Booking.findOneAndDelete({ _id: booking._id, status: "cancellation_requested" })
+    : await Booking.findOneAndUpdate(
+      { _id: booking._id, status: "cancellation_requested" },
+      { $set: { status: nextStatus } },
+      { new: true }
+    );
   if (!response) {
     req.flash("error", "This cancellation request has already been answered.");
     return res.redirect("/bookings/hosting");
   }
+  await Notification.updateMany(
+    { recipient: req.user._id, booking: booking._id, readAt: null },
+    { $set: { readAt: new Date() } }
+  );
   if (nextStatus === "cancelled") {
     req.flash("success", "Cancellation approved. The rooms are available again.");
   } else {

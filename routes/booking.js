@@ -6,6 +6,8 @@ const bookingController = require("../controllers/bookings");
 
 router.get("/", isLoggedIn, wrapAsync(bookingController.index));
 router.get("/hosting", isLoggedIn, wrapAsync(bookingController.hosting));
+router.get("/notifications", isLoggedIn, wrapAsync(bookingController.notifications));
+router.post("/notifications/read", isLoggedIn, wrapAsync(bookingController.markNotificationsRead));
 router.post("/:bookingId/cancel", isLoggedIn, wrapAsync(bookingController.cancel));
 router.post("/:bookingId/cancellation/:decision", isLoggedIn, wrapAsync(bookingController.respondToCancellation));
 

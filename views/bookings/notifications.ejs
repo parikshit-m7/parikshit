@@ -1,0 +1,28 @@
+<% layout("/layouts/boilerplate") %>
+<section class="booking-page">
+  <div class="section-kicker">Host updates</div>
+  <h1 class="section-title">Notifications</h1>
+  <p class="section-subtitle">New bookings and guest cancellation requests for your stays.</p>
+  <% if (notifications.some((notification) => !notification.readAt)) { %>
+    <form method="POST" action="/bookings/notifications/read" class="notification-read-all-form">
+      <button class="booking-keep-booking" type="submit">Mark all as read</button>
+    </form>
+  <% } %>
+  <% if (!notifications.length) { %>
+    <div class="empty-state"><i class="fa-regular fa-bell"></i><h3>No notifications yet</h3><p class="text-muted">New guest bookings and cancellation requests will appear here.</p></div>
+  <% } else { %>
+    <div class="booking-list">
+      <% for (const notification of notifications) { %>
+        <article class="booking-notification <%= notification.readAt ? '' : 'is-unread' %>">
+          <span class="booking-notification-icon"><i class="fa-solid <%= notification.type === 'cancellation_requested' ? 'fa-calendar-xmark' : 'fa-calendar-check' %>"></i></span>
+          <div class="booking-notification-copy">
+            <h2><%= notification.type === 'cancellation_requested' ? 'Cancellation request' : 'New booking' %></h2>
+            <p><%= notification.type === 'cancellation_requested' ? 'A guest asked to cancel' : 'A guest booked' %> <strong><%= notification.listing?.title || 'your stay' %></strong>.</p>
+            <time datetime="<%= notification.createdAt.toISOString() %>"><%= notification.createdAt.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) %></time>
+          </div>
+          <a class="booking-notification-action" href="/bookings/hosting"><%= notification.type === 'cancellation_requested' ? 'Review request' : 'View booking' %> <i class="fa-solid fa-arrow-right"></i></a>
+        </article>
+      <% } %>
+    </div>
+  <% } %>
+</section>

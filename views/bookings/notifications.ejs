@@ -11,7 +11,7 @@
   <% if (!notifications.length) { %>
     <div class="empty-state"><i class="fa-regular fa-bell"></i><h3>No notifications yet</h3><p class="text-muted">New guest bookings and cancellation requests will appear here.</p></div>
   <% } else { %>
-    <div class="booking-list">
+    <div class="booking-notification-list">
       <% for (const notification of notifications) { %>
         <article class="booking-notification <%= notification.readAt ? '' : 'is-unread' %>">
           <span class="booking-notification-icon"><i class="fa-solid <%= notification.type === 'cancellation_requested' ? 'fa-calendar-xmark' : 'fa-calendar-check' %>"></i></span>
